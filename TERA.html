@@ -338,8 +338,18 @@ if (typeof Promise.withResolvers !== 'function') {
     return { promise, resolve, reject };
   };
 }
-const pdfEngineReady = import('./vendor/pdfjs/pdf.min.mjs').then(engine => {
-  engine.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.mjs';
+// Keep the API module and worker on one explicit cache generation. PDF.js
+// rejects mixed versions, and browsers may otherwise reuse an older worker
+// cached under the same filename after a deployment.
+const PDFJS_VERSION = '4.2.67';
+const PDFJS_CACHE_GENERATION = '4.2.67-tera-20260814';
+const PDFJS_ENGINE_URL = `./vendor/pdfjs/pdf.min.mjs?v=${PDFJS_CACHE_GENERATION}`;
+const PDFJS_WORKER_URL = `./vendor/pdfjs/pdf.worker.min.mjs?v=${PDFJS_CACHE_GENERATION}`;
+const pdfEngineReady = import(PDFJS_ENGINE_URL).then(engine => {
+  if (engine.version !== PDFJS_VERSION) {
+    throw new Error(`PDF engine version ${engine.version || 'unknown'} does not match TERA ${PDFJS_VERSION}`);
+  }
+  engine.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
   return engine;
 });
 

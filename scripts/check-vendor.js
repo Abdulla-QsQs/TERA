@@ -13,4 +13,11 @@ for (const [file, wanted] of expected) {
   if (actual !== wanted) throw new Error(`${file} checksum changed; regenerate intentionally and update scripts/check-vendor.js`);
 }
 
-console.log('Pinned vendor checksums: OK');
+const pdfVersion = require('pdfjs-dist/package.json').version;
+const pdfEngine = fs.readFileSync('vendor/pdfjs/pdf.min.mjs', 'utf8');
+const pdfWorker = fs.readFileSync('vendor/pdfjs/pdf.worker.min.mjs', 'utf8');
+if (pdfVersion !== '4.2.67' || !pdfEngine.includes(`apiVersion:"${pdfVersion}"`) || !pdfWorker.includes(`c="${pdfVersion}"`)) {
+  throw new Error(`PDF.js API/worker version pairing is invalid (package ${pdfVersion})`);
+}
+
+console.log(`Pinned vendor checksums and PDF.js ${pdfVersion} pairing: OK`);

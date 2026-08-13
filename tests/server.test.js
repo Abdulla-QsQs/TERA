@@ -65,9 +65,13 @@ test('runtime assets are self-hosted with safe content types', async () => {
   assert.match(core.headers.get('content-type'), /^text\/javascript/);
   assert.match(pdfEngine.headers.get('content-type'), /^text\/javascript/);
   assert.match(worker.headers.get('content-type'), /^text\/javascript/);
+  const compilerHtml = await html.text();
+  assert.match(compilerHtml, /PDFJS_CACHE_GENERATION = '4\.2\.67-tera-20260814'/);
+  assert.match(compilerHtml, /pdf\.min\.mjs\?v=\$\{PDFJS_CACHE_GENERATION\}/);
+  assert.match(compilerHtml, /pdf\.worker\.min\.mjs\?v=\$\{PDFJS_CACHE_GENERATION\}/);
   assert.equal(photo.headers.get('content-type'), 'image/jpeg');
   assert.match(method.headers.get('content-type'), /^text\/markdown/);
-  assert.doesNotMatch(await html.text(), /https?:\/\/[^'"\s>]+\.(?:js|mjs)(?:[?'"\s>]|$)/i);
+  assert.doesNotMatch(compilerHtml, /https?:\/\/[^'"\s>]+\.(?:js|mjs)(?:[?'"\s>]|$)/i);
 });
 
 test('search discovery files use the current public origin', async () => {

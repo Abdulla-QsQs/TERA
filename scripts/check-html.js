@@ -15,6 +15,14 @@ for (const source of scripts) new Function(source);
 for (const source of landingScripts) new Function(source);
 if (!html.includes('vendor/pdf-lib/pdf-lib.min.js')) throw new Error('Pinned pdf-lib asset is missing from TERA.html');
 if (!html.includes('vendor/pdfjs/pdf.min.mjs')) throw new Error('Pinned pdf.js asset is missing from TERA.html');
+if (!html.includes("const PDFJS_VERSION = '4.2.67'") ||
+    !html.includes("const PDFJS_CACHE_GENERATION = '4.2.67-tera-20260814'")) {
+  throw new Error('Matching versioned PDF.js API/worker URLs are missing from TERA.html');
+}
+if (!html.includes('pdf.min.mjs?v=${PDFJS_CACHE_GENERATION}') ||
+    !html.includes('pdf.worker.min.mjs?v=${PDFJS_CACHE_GENERATION}')) {
+  throw new Error('PDF.js cache generation is not applied to both the API and worker');
+}
 if (!html.includes('core.js')) throw new Error('Testable TERA core is missing from TERA.html');
 if (/https?:\/\/[^'"\s>]+\.(?:js|mjs)(?:[?'"\s>]|$)/i.test(html)) throw new Error('Remote executable script detected in TERA.html');
 if (!landing.includes('href="TERA.html"')) throw new Error('Landing page does not link to the compiler');
