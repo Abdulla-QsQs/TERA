@@ -2,6 +2,15 @@ import { jsonResponse, methodNotAllowed, originAllowed, readJson, responseHeader
 
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 60000;
+const PDF_REQUESTS_PER_MINUTE = 60;
+
+function retryAfterHeader(value, fallback = 15) {
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) return String(Math.min(300, Math.ceil(numeric)));
+  const date = Date.parse(String(value || ''));
+  if (Number.isFinite(date)) return String(Math.min(300, Math.max(1, Math.ceil((date - Date.now()) / 1000))));
+  return String(fallback);
+}
 
 function allowedHosts(env) {
   return new Set(String(env?.TERA_ALLOWED_PDF_HOSTS || 'pastpapers.papacambridge.com')
@@ -14,8 +23,11 @@ export async function onPdfRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return methodNotAllowed('POST');
   if (!originAllowed(request, env)) return textResponse('Origin not allowed.', 403);
-  if (!await withinRateLimit(context, { limit:30, periodSeconds:60 })) {
-    return textResponse('Too many PDF requests. Try again shortly.', 429, { 'Retry-After':'60' });
+  if (!await withinRateLimit(context, { limit:PDF_REQUESTS_PER_MINUTE, periodSeconds:60 })) {
+    return textResponse('TERA is receiving too many PDF requests from this connection. Try again shortly.', 429, {
+      'Retry-After':'60',
+      'X-TERA-Rate-Limit-Source':'tera',
+    });
   }
 
   let input;
@@ -45,7 +57,13 @@ export async function onPdfRequest(context) {
       headers:{ Accept:'application/pdf' },
     });
     if (upstream.status >= 300 && upstream.status < 400) return textResponse('Upstream redirects are not accepted.', 502);
-    if (!upstream.ok) return textResponse(`Upstream HTTP ${upstream.status}`, upstream.status);
+    if (!upstream.ok) {
+      const rateLimitHeaders = upstream.status === 429 ? {
+        'Retry-After':retryAfterHeader(upstream.headers.get('retry-after')),
+        'X-TERA-Rate-Limit-Source':'upstream',
+      } : {};
+      return textResponse(`Paper archive HTTP ${upstream.status}`, upstream.status, rateLimitHeaders);
+    }
     const contentType = upstream.headers.get('content-type') || '';
     const length = Number(upstream.headers.get('content-length') || 0);
     if (!/^application\/pdf(?:;|$)/i.test(contentType)) return textResponse('Upstream response is not a PDF.', 415);

@@ -144,7 +144,10 @@ function originAllowed(req) {
 async function proxyPdf(req, res) {
   if (req.method !== 'POST') return send(res, 405, 'Method not allowed.', { Allow:'POST' });
   if (!originAllowed(req)) return send(res, 403, 'Origin not allowed.');
-  if (!withinRateLimit(req)) return send(res, 429, 'Too many PDF requests. Try again shortly.', { 'Retry-After':'60' });
+  if (!withinRateLimit(req)) return send(res, 429, 'TERA is receiving too many PDF requests from this connection. Try again shortly.', {
+    'Retry-After':'60',
+    'X-TERA-Rate-Limit-Source':'tera',
+  });
 
   if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) return send(res, 415, 'JSON is required.');
   let raw;
@@ -183,7 +186,14 @@ async function proxyPdf(req, res) {
       signal: controller.signal,
       headers: { Accept:'application/pdf', 'User-Agent':'TERA/0.1' },
     });
-    if (!upstream.ok) return send(res, upstream.status, `Upstream HTTP ${upstream.status}`);
+    if (!upstream.ok) {
+      const retryAfter = Number(upstream.headers.get('retry-after'));
+      const rateLimitHeaders = upstream.status === 429 ? {
+        'Retry-After':String(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(300, Math.ceil(retryAfter)) : 15),
+        'X-TERA-Rate-Limit-Source':'upstream',
+      } : {};
+      return send(res, upstream.status, `Paper archive HTTP ${upstream.status}`, rateLimitHeaders);
+    }
     const contentType = upstream.headers.get('content-type') || '';
     const length = Number(upstream.headers.get('content-length') || 0);
     if (!/^application\/pdf(?:;|$)/i.test(contentType)) return send(res, 415, 'Upstream response is not a PDF.');

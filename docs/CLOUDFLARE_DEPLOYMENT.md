@@ -23,7 +23,7 @@ Create a D1 database named `tera-production`, bind it to Pages Functions as `DB`
 - Optional text variable `TERA_ALLOWED_PDF_HOSTS` -> `pastpapers.papacambridge.com`
 - Optional text variable `TERA_ALLOWED_ORIGINS` -> additional reviewed HTTPS origins only
 
-Pages supports only a subset of Worker bindings, so production does not assume the Worker Rate Limiting binding exists. TERA's Pages fallback uses D1 counters keyed by a rotating HMAC of the connecting IP, route, and one-minute bucket. Raw IP addresses are not stored. Mutation routes permit 20 requests per minute and the PDF relay permits 30, enough for a ten-pair Mega run with retry headroom. Rate-limit rows are removed after ten minutes by the application retention pass.
+Pages supports only a subset of Worker bindings, so production does not assume the Worker Rate Limiting binding exists. TERA's Pages fallback uses D1 counters keyed by a rotating HMAC of the connecting IP, route, and one-minute bucket. Raw IP addresses are not stored. Mutation routes permit 20 requests per minute and the PDF relay permits 60, enough for a ten-pair Mega run, its optional threshold lookups, and one immediate retry. Rate-limit rows are removed after ten minutes by the application retention pass.
 
 Set the Pages Functions free-limit behavior to **fail closed**. Never put D1 identifiers, API tokens, secrets, or user data in HTML.
 

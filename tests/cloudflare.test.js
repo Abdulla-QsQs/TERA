@@ -141,6 +141,31 @@ test('Cloudflare D1 fallback rate limiter fails closed after its configured allo
   assert.equal(limited.env.DB.rateLimits.size, 1);
 });
 
+test('PDF relay identifies whether TERA or the archive imposed a rate limit', async () => {
+  const teraLimited = context('/api/pdf', 'POST', { url:'https://pastpapers.papacambridge.com/file.pdf' }, {
+    'cf-connecting-ip':'203.0.113.42',
+  });
+  teraLimited.env.RATE_LIMITER.limit = async () => ({ success:false });
+  const teraResponse = await pdfHandler.onPdfRequest(teraLimited);
+  assert.equal(teraResponse.status, 429);
+  assert.equal(teraResponse.headers.get('x-tera-rate-limit-source'), 'tera');
+  assert.equal(teraResponse.headers.get('retry-after'), '60');
+
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response('Slow down', { status:429, headers:{ 'Retry-After':'7' } });
+  try {
+    const upstreamResponse = await pdfHandler.onPdfRequest(context('/api/pdf', 'POST', {
+      url:'https://pastpapers.papacambridge.com/file.pdf',
+    }));
+    assert.equal(upstreamResponse.status, 429);
+    assert.equal(upstreamResponse.headers.get('x-tera-rate-limit-source'), 'upstream');
+    assert.equal(upstreamResponse.headers.get('retry-after'), '7');
+    assert.equal(await upstreamResponse.text(), 'Paper archive HTTP 429');
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 test('Cloudflare API responses retain the release security headers', async () => {
   const response = await wallHandlers.onStatsRequest(context('/api/wall'));
   assert.equal(response.status, 200);

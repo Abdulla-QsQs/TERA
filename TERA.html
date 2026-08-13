@@ -379,15 +379,19 @@ function tabKey(event, name, el) {
 // ═══════════════════════════════════════════
 const FETCH_ROUTES = [
   {
-    name: 'TERA server', timeout: 45000,
+    name: 'TERA server', timeout: 70000,
     url: () => /^https?:$/.test(location.protocol) ? `${location.origin}/api/pdf` : null,
     init: u => ({ method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/pdf' }, body:JSON.stringify({ url:u }) })
   },
 ];
 let workingRouteIdx = null; // reuse a successful route first
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
+const MAX_PDF_FETCH_ATTEMPTS = 3;
+const TRANSIENT_PDF_STATUSES = new Set([429, 502, 503, 504]);
 const MOBILE_RENDER_WIDTH = 1280;
 const DESKTOP_RENDER_WIDTH = 1750;
+let pdfRetryUntil = 0;
+let pdfRetryPromise = null;
 
 function isMobileCompiler() {
   return matchMedia('(max-width: 620px), (pointer: coarse)').matches;
@@ -432,6 +436,53 @@ function compileStage(label, work) {
   });
 }
 
+function retryAfterSeconds(response, fallback) {
+  const value = response.headers.get('retry-after');
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) return Math.min(60, Math.ceil(numeric));
+  const date = Date.parse(String(value || ''));
+  if (Number.isFinite(date)) return Math.min(60, Math.max(1, Math.ceil((date - Date.now()) / 1000)));
+  return fallback;
+}
+
+async function pdfResponseError(response) {
+  let detail = '';
+  try { detail = (await response.text()).replace(/\s+/g, ' ').trim().slice(0, 180); } catch (_) {}
+  const error = new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ''}`);
+  error.status = response.status;
+  error.retryAfter = retryAfterSeconds(response, response.status === 429 ? 15 : 3);
+  const source = response.headers.get('x-tera-rate-limit-source');
+  error.sourceLabel = source === 'upstream' ? 'paper archive' : source === 'tera' ? 'TERA relay' : 'PDF source';
+  return error;
+}
+
+async function waitForPdfRetry(error, attempt) {
+  const seconds = Math.max(1, Number(error.retryAfter || attempt * 3));
+  pdfRetryUntil = Math.max(pdfRetryUntil, Date.now() + seconds * 1000);
+  if (!pdfRetryPromise) {
+    pdfRetryPromise = (async () => {
+      let lastShown = null;
+      while (Date.now() < pdfRetryUntil) {
+        const remaining = Math.max(1, Math.ceil((pdfRetryUntil - Date.now()) / 1000));
+        if (lastShown === null || remaining <= 5 || remaining % 10 === 0) {
+          log(`  Waiting for ${error.sourceLabel || 'PDF source'} — retrying in ${remaining}s…`, 'warn');
+          lastShown = remaining;
+        }
+        await sleep(Math.min(5000, Math.max(250, pdfRetryUntil - Date.now())));
+        await nextPaint();
+      }
+    })().finally(() => { pdfRetryPromise = null; });
+  }
+  try {
+    await pdfRetryPromise;
+  } catch (retryError) {
+    if (pdfRetryPromise) {
+      pdfRetryPromise = null;
+    }
+    throw retryError;
+  }
+}
+
 async function fetchPDF(url) {
   const order = workingRouteIdx !== null
     ? [workingRouteIdx, ...[...Array(FETCH_ROUTES.length).keys()].filter(i=>i!==workingRouteIdx)]
@@ -443,31 +494,48 @@ async function fetchPDF(url) {
     if (!routeUrl) continue;
     const routeName = route.name;
     const cached    = (i === workingRouteIdx);
-    let tid = null;
-    try {
-      log('  ' + (cached ? '↩ Reusing route ('+routeName+')…' : 'Trying route ('+routeName+')…'), 'dim');
-      const ctrl = new AbortController();
-      tid = setTimeout(() => ctrl.abort(), route.timeout);
-      const resp = await fetch(routeUrl, { ...route.init(url), signal: ctrl.signal });
-      clearTimeout(tid);
-      tid = null;
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const buf   = await resp.arrayBuffer();
-      if (buf.byteLength < 500) throw new Error('Response too small');
-      if (buf.byteLength > MAX_PDF_BYTES) throw new Error('PDF is larger than 25 MB');
-      const bytes = new Uint8Array(buf);
-      if (bytes[0]!==0x25||bytes[1]!==0x50||bytes[2]!==0x44||bytes[3]!==0x46)
-        throw new Error('Not a valid PDF (bad header)');
-      log('  ✓ ' + routeName + ' — ' + (buf.byteLength/1024).toFixed(0) + ' KB', 'dim');
-      workingRouteIdx = i;
-      return bytes;
-    } catch (e) {
-      if (tid) clearTimeout(tid);
-      lastErr = e;
-      log('  ✗ ' + routeName + ': ' + e.message, 'dim');
-      if (cached) workingRouteIdx = null;
-      await sleep(500);
+    let routeError = null;
+    log('  ' + (cached ? '↩ Reusing route ('+routeName+')…' : 'Trying route ('+routeName+')…'), 'dim');
+    for (let attempt = 1; attempt <= MAX_PDF_FETCH_ATTEMPTS; attempt++) {
+      let tid = null;
+      try {
+        if (attempt > 1) log(`  Retry ${attempt}/${MAX_PDF_FETCH_ATTEMPTS} (${routeName})…`, 'dim');
+        const ctrl = new AbortController();
+        tid = setTimeout(() => ctrl.abort(), route.timeout);
+        const resp = await fetch(routeUrl, { ...route.init(url), signal: ctrl.signal });
+        clearTimeout(tid);
+        tid = null;
+        if (!resp.ok) throw await pdfResponseError(resp);
+        const buf = await resp.arrayBuffer();
+        if (buf.byteLength < 500) throw new Error('Response too small');
+        if (buf.byteLength > MAX_PDF_BYTES) throw new Error('PDF is larger than 25 MB');
+        const bytes = new Uint8Array(buf);
+        if (bytes[0]!==0x25||bytes[1]!==0x50||bytes[2]!==0x44||bytes[3]!==0x46)
+          throw new Error('Not a valid PDF (bad header)');
+        log('  ✓ ' + routeName + ' — ' + (buf.byteLength/1024).toFixed(0) + ' KB', 'dim');
+        workingRouteIdx = i;
+        return bytes;
+      } catch (error) {
+        if (tid) clearTimeout(tid);
+        routeError = error;
+        const transient = TRANSIENT_PDF_STATUSES.has(Number(error.status)) || error.name === 'AbortError';
+        if (transient && attempt < MAX_PDF_FETCH_ATTEMPTS) {
+          if (error.name === 'AbortError') {
+            error.message = 'Request timed out';
+            error.sourceLabel = routeName;
+            error.retryAfter = 3;
+          }
+          log('  ' + (error.status === 429 ? '⏳' : '⚠') + ' ' + routeName + ': ' + error.message, 'dim');
+          await waitForPdfRetry(error, attempt);
+          continue;
+        }
+        break;
+      }
     }
+    lastErr = routeError;
+    log('  ✗ ' + routeName + ': ' + routeError?.message, 'dim');
+    if (cached) workingRouteIdx = null;
+    await sleep(500);
   }
   throw new Error('PDF source unavailable: ' + lastErr?.message);
 }
