@@ -8,17 +8,12 @@ const pdfLibDir = path.join(root, 'vendor', 'pdf-lib');
 fs.mkdirSync(pdfJsDir, { recursive: true });
 fs.mkdirSync(pdfLibDir, { recursive: true });
 
-esbuild.buildSync({
-  entryPoints: [require.resolve('pdfjs-dist/legacy/build/pdf.mjs')],
-  outfile: path.join(pdfJsDir, 'pdf.min.js'),
-  bundle: true,
-  minify: true,
-  platform: 'browser',
-  format: 'iife',
-  globalName: 'pdfjsLib',
-  target: ['chrome109', 'firefox115', 'safari16'],
-  legalComments: 'eof',
-});
+const obsoletePdfJs = path.join(pdfJsDir, 'pdf.min.js');
+if (fs.existsSync(obsoletePdfJs)) fs.unlinkSync(obsoletePdfJs);
+fs.copyFileSync(
+  require.resolve('pdfjs-dist/legacy/build/pdf.min.mjs'),
+  path.join(pdfJsDir, 'pdf.min.mjs')
+);
 
 fs.copyFileSync(
   require.resolve('pdfjs-dist/legacy/build/pdf.worker.min.mjs'),

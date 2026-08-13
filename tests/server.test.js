@@ -52,6 +52,7 @@ test('runtime assets are self-hosted with safe content types', async () => {
   const landing = await fetch(`${baseUrl}/`);
   const html = await fetch(`${baseUrl}/TERA.html`);
   const core = await fetch(`${baseUrl}/core.js`);
+  const pdfEngine = await fetch(`${baseUrl}/vendor/pdfjs/pdf.min.mjs`);
   const worker = await fetch(`${baseUrl}/vendor/pdfjs/pdf.worker.min.mjs`);
   const photo = await fetch(`${baseUrl}/assets/student-study.jpg`);
   const method = await fetch(`${baseUrl}/docs/IMPACT_METHOD.md`);
@@ -62,6 +63,7 @@ test('runtime assets are self-hosted with safe content types', async () => {
   assert.doesNotMatch(landingHtml, /%%TERA_PUBLIC_URL%%/);
   assert.match(html.headers.get('content-type'), /^text\/html/);
   assert.match(core.headers.get('content-type'), /^text\/javascript/);
+  assert.match(pdfEngine.headers.get('content-type'), /^text\/javascript/);
   assert.match(worker.headers.get('content-type'), /^text\/javascript/);
   assert.equal(photo.headers.get('content-type'), 'image/jpeg');
   assert.match(method.headers.get('content-type'), /^text\/markdown/);

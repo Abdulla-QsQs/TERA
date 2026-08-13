@@ -3,7 +3,7 @@
 TERA's browser build includes:
 
 - **pdf-lib 1.17.1**, copyright Andrew Dillon and contributors, licensed under the MIT License.
-- **PDF.js / pdfjs-dist 6.2.108**, copyright Mozilla Foundation and contributors, licensed under the Apache License 2.0.
+- **PDF.js / pdfjs-dist 4.2.67**, copyright Mozilla Foundation and contributors, licensed under the Apache License 2.0.
 
 The development build uses **esbuild 0.25.9**, copyright Evan Wallace and contributors, licensed under the MIT License.
 

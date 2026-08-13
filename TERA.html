@@ -10,7 +10,6 @@
 <script src="wall.js" defer></script>
 <title>TERA — Past Paper PDF Compiler</title>
 <script src="vendor/pdf-lib/pdf-lib.min.js"></script>
-<script src="vendor/pdfjs/pdf.min.js"></script>
 <script src="core.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -339,8 +338,10 @@ if (typeof Promise.withResolvers !== 'function') {
     return { promise, resolve, reject };
   };
 }
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'vendor/pdfjs/pdf.worker.min.mjs';
+const pdfEngineReady = import('./vendor/pdfjs/pdf.min.mjs').then(engine => {
+  engine.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.mjs';
+  return engine;
+});
 
 // ═══════════════════════════════════════════
 //  STATE
@@ -411,6 +412,9 @@ function explainCompileError(error) {
 function pdfLoadOptions(bytes) {
   return {
     data:new Uint8Array(bytes),
+    // TERA handles third-party and local PDFs, so dynamic code generation is
+    // kept off even though PDF.js supports it as a font-rendering fast path.
+    isEvalSupported:false,
     // iOS Safari has historically exposed partial implementations of these
     // APIs. The conservative path is more stable and costs little for TERA's
     // page-at-a-time processing.
@@ -592,7 +596,8 @@ function caieThresholdUrl(code, session, year) {
 }
 
 async function extractComponentThreshold(gtBytes, pair) {
-  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(gtBytes.slice(0)));
+  const pdfEngine = await pdfEngineReady;
+  const loadingTask = pdfEngine.getDocument(pdfLoadOptions(gtBytes.slice(0)));
   const pdfDoc = await loadingTask.promise;
   try {
     const lines = [];
@@ -790,8 +795,9 @@ async function pageHasVisibleInk(page) {
 }
 
 async function getNonBlankIndices(pdfBytes, onPage = null) {
+  const pdfEngine = await pdfEngineReady;
   const copy   = pdfBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
+  const loadingTask = pdfEngine.getDocument(pdfLoadOptions(copy));
   const pdfDoc = await loadingTask.promise;
   const total  = pdfDoc.numPages;
   const keep   = [];
@@ -997,8 +1003,9 @@ function isMarkSchemeBoilerplate(text) {
 }
 
 async function getMarkSchemeContentIndices(msBytes, onPage = null) {
+  const pdfEngine = await pdfEngineReady;
   const copy   = msBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
+  const loadingTask = pdfEngine.getDocument(pdfLoadOptions(copy));
   const pdfDoc = await loadingTask.promise;
   try {
     const texts = [];
@@ -1077,8 +1084,9 @@ async function renderPageToJpeg(pdfJsDoc, pageNum, renderW) {
 }
 
 async function compactMS(msBytes, keepIndices, onSheet = null) {
+  const pdfEngine = await pdfEngineReady;
   const copy     = msBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
+  const loadingTask = pdfEngine.getDocument(pdfLoadOptions(copy));
   const pdfJsDoc = await loadingTask.promise;
   const outDoc   = await PDFLib.PDFDocument.create();
   const layoutCounts = { portrait:0, landscape:0 };

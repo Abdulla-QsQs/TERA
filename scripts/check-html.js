@@ -14,7 +14,7 @@ const landingScripts = [...landing.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>
 for (const source of scripts) new Function(source);
 for (const source of landingScripts) new Function(source);
 if (!html.includes('vendor/pdf-lib/pdf-lib.min.js')) throw new Error('Pinned pdf-lib asset is missing from TERA.html');
-if (!html.includes('vendor/pdfjs/pdf.min.js')) throw new Error('Pinned pdf.js asset is missing from TERA.html');
+if (!html.includes('vendor/pdfjs/pdf.min.mjs')) throw new Error('Pinned pdf.js asset is missing from TERA.html');
 if (!html.includes('core.js')) throw new Error('Testable TERA core is missing from TERA.html');
 if (/https?:\/\/[^'"\s>]+\.(?:js|mjs)(?:[?'"\s>]|$)/i.test(html)) throw new Error('Remote executable script detected in TERA.html');
 if (!landing.includes('href="TERA.html"')) throw new Error('Landing page does not link to the compiler');
@@ -24,7 +24,7 @@ if (!landing.includes('rel="canonical"') || !landing.includes('application/ld+js
 if (!landing.includes('data-tera-stat="visitors"')) throw new Error('Landing page usage counter is missing');
 if (!html.includes('wall.js') || !html.includes('TERAUsage.recordCompilation')) throw new Error('Compiler usage reporting hook is missing');
 if (!html.includes("typeof Promise.withResolvers !== 'function'")) throw new Error('iOS Safari Promise compatibility guard is missing');
-if (!html.includes('isOffscreenCanvasSupported:false') || !html.includes('isImageDecoderSupported:false')) throw new Error('Conservative iOS PDF.js options are missing');
+if (!html.includes('isOffscreenCanvasSupported:false') || !html.includes('isImageDecoderSupported:false') || !html.includes('isEvalSupported:false')) throw new Error('Conservative iOS PDF.js options are missing');
 if (!html.includes('typeof canvas.toBlob === \'function\'')) throw new Error('iOS canvas export fallback is missing');
 for (const asset of ['assets/student-study.jpg', 'assets/paper-waste.jpg', 'assets/forest-sunlight.jpg', 'assets/leaf-emblem.jpg']) {
   if (!landing.includes(asset)) throw new Error(`Landing page photo is missing: ${asset}`);

@@ -24,7 +24,7 @@ const PUBLIC_FILE_DEFINITIONS = [
   { route:'/assets/chevron-down.svg', file:'assets/chevron-down.svg', type:'image/svg+xml', immutable:true },
   { route:'/assets/external-link.svg', file:'assets/external-link.svg', type:'image/svg+xml', immutable:true },
   { route:'/vendor/pdf-lib/pdf-lib.min.js', file:'vendor/pdf-lib/pdf-lib.min.js', type:'text/javascript; charset=utf-8', immutable:true },
-  { route:'/vendor/pdfjs/pdf.min.js', file:'vendor/pdfjs/pdf.min.js', type:'text/javascript; charset=utf-8', immutable:true },
+  { route:'/vendor/pdfjs/pdf.min.mjs', file:'vendor/pdfjs/pdf.min.mjs', type:'text/javascript; charset=utf-8', immutable:true },
   { route:'/vendor/pdfjs/pdf.worker.min.mjs', file:'vendor/pdfjs/pdf.worker.min.mjs', type:'text/javascript; charset=utf-8', immutable:true },
 ];
 
