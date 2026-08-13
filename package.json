@@ -19,7 +19,7 @@
     "vendor": "node scripts/vendor.js",
     "check:vendor": "node scripts/check-vendor.js",
     "check": "node --check server.js && node --check visitor-store.js && node --check wall.js && node scripts/check-html.js && npm run check:vendor",
-    "test": "node --test --test-isolation=none tests/*.test.js",
+    "test": "node tests/run.js",
     "test:all": "npm run check && npm test"
   },
   "engines": {
