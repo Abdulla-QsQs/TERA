@@ -6,6 +6,7 @@ node_modules
 test-fixtures
 test-output
 tests
-docs
+docs/*
+!docs/IMPACT_METHOD.md
 *.log
 biology-*-links.txt
