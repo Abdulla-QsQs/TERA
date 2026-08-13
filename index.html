@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Free past-paper booklet maker for Cambridge A Level, O Level and IGCSE practice. Combine permitted question papers and mark schemes into clear, print-efficient PDFs.">
+<meta name="keywords" content="free past paper booklet PDF download, past paper booklet maker, past paper PDF compiler, Cambridge A Level past papers, Cambridge O Level past papers, Cambridge IGCSE past papers, mark scheme booklet, print efficient revision">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="theme-color" content="#181818">
+<link rel="canonical" href="%%TERA_PUBLIC_URL%%/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TERA">
+<meta property="og:title" content="TERA — Free Past-Paper Booklet Maker">
+<meta property="og:description" content="Turn permitted question papers and mark schemes into clear, print-efficient practice booklets.">
+<meta property="og:url" content="%%TERA_PUBLIC_URL%%/">
+<meta property="og:image" content="%%TERA_PUBLIC_URL%%/assets/student-study.jpg">
+<meta property="og:image:alt" content="A student studying with printed learning materials">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TERA — Free Past-Paper Booklet Maker">
+<meta name="twitter:description" content="Practice more and print less with transparent page-reduction reporting.">
+<meta name="twitter:image" content="%%TERA_PUBLIC_URL%%/assets/student-study.jpg">
+<link rel="stylesheet" href="wall.css">
+<script src="wall.js" defer></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TERA","url":"%%TERA_PUBLIC_URL%%/","applicationCategory":"EducationalApplication","operatingSystem":"Any modern browser","description":"A free browser-based tool that turns permitted past papers and mark schemes into print-efficient practice booklets.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Past-paper PDF booklet compilation","Blank-page detection","Mark-scheme page packing","Exact source and output page reporting"]}</script>
+<title>TERA — Free Past-Paper Booklet Maker</title>
+<style>
+:root{--bg:#181818;--surface:#222;--surface-2:#282828;--ink:#f7f7f2;--muted:#bebfb9;--lime:#dff47e;--green:#3f7f45;--line:#3b3b3b;--radius:18px;--max:1120px}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,"Helvetica Neue",sans-serif;font-size:16px;line-height:1.48}
+a{color:inherit}img{display:block;max-width:100%}button,input,select{font:inherit}
+.skip-link{position:fixed;z-index:100;left:16px;top:-70px;padding:10px 16px;border-radius:999px;background:var(--lime);color:#151515}.skip-link:focus{top:16px}
+.shell{width:min(var(--max),calc(100% - 64px));margin-inline:auto}
+.sticky-nav{position:sticky;z-index:20;top:0;height:72px;display:flex;align-items:center;border-bottom:1px solid var(--line);background:rgba(24,24,24,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.nav-inner{position:relative;display:flex;align-items:center;justify-content:flex-end}
+.wordmark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;text-decoration:none;font-size:20px;font-weight:900;letter-spacing:-.05em}
+.nav-link{margin-right:auto;color:#d7d8d2;text-decoration:none;font-size:14px}.nav-link:hover,.nav-link:focus-visible{text-decoration:underline;text-underline-offset:4px}
+.button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 20px;border:1px solid transparent;border-radius:999px;background:var(--lime);color:#171717;text-decoration:none;font-weight:750;transition:transform .18s ease,filter .18s ease}
+.button:hover,.button:focus-visible{transform:translateY(-1px);filter:brightness(1.05);outline:none}.button.ghost{border-color:#777;background:transparent;color:#fff}.button.ghost:hover,.button.ghost:focus-visible{background:#fff;color:#171717}
+.hero{position:relative;min-height:calc(100vh - 16px);margin:8px;overflow:hidden;border-radius:var(--radius);display:grid;place-items:center;background:#315e36;text-align:center}
+.hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 54%;filter:saturate(.75) contrast(1.07)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(26,70,34,.45),rgba(13,53,28,.58)),radial-gradient(circle at 50% 42%,rgba(110,184,88,.12),rgba(7,25,13,.36) 72%)}
+.hero-brand{position:absolute;z-index:2;top:19px;left:50%;transform:translateX(-50%);font-size:21px;font-weight:900;letter-spacing:-.05em}
+.hero-content{position:relative;z-index:2;width:min(760px,calc(100% - 36px));padding:96px 0 154px}
+.hero h1{margin:0 0 28px;font-size:clamp(34px,5vw,58px);line-height:1.02;letter-spacing:-.045em}
+.hero-console{position:relative;min-height:118px;display:flex;align-items:center;gap:20px;padding:24px 26px;border:1px solid rgba(255,255,255,.86);border-radius:22px;background:#242424;color:#fff;text-align:left;box-shadow:0 22px 58px rgba(0,0,0,.18)}
+.hero-console-copy{flex:1;min-width:0}.console-label{display:block;margin-bottom:4px;color:var(--lime);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.console-title{display:block;font-size:20px;font-weight:750}.console-detail{display:block;margin-top:4px;color:#bfc0ba;font-size:14px}
+.hero-proof{position:absolute;z-index:2;left:50%;bottom:58px;transform:translateX(-50%);display:flex;align-items:stretch;min-width:520px;padding:13px 0;border:1px solid rgba(255,255,255,.25);border-radius:13px;background:rgba(24,36,27,.72);box-shadow:0 14px 40px rgba(0,0,0,.16);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);text-align:left}
+.proof-item{display:flex;align-items:center;gap:12px;width:50%;padding:0 22px}.proof-item+.proof-item{border-left:1px solid rgba(255,255,255,.26)}.proof-icon{flex:0 0 29px;width:29px;height:29px;filter:invert(1)}.proof-item strong{display:block;font-size:16px}.proof-item span{display:block;color:#d4d5cf;font-size:12px}
+.scroll-button{position:absolute;z-index:3;left:50%;bottom:-1px;transform:translateX(-50%);width:50px;height:50px;border:1px solid #ddd;border-radius:50%;background:#2b2b2b;cursor:pointer}.scroll-button img{width:22px;height:22px;margin:auto;filter:invert(1)}.scroll-button:hover,.scroll-button:focus-visible{background:var(--lime);outline:none}.scroll-button:hover img,.scroll-button:focus-visible img{filter:none}
+.section{padding:108px 0}.section-heading{text-align:center;margin-bottom:54px}.eyebrow{margin:0 0 16px;color:#f3f3ef;font-size:13px;font-weight:800;text-transform:uppercase}.section h2{max-width:820px;margin:0 auto;font-size:clamp(36px,4.8vw,56px);line-height:1.03;letter-spacing:-.045em}.section-lede{max-width:700px;margin:20px auto 0;color:var(--muted);font-size:18px}
+.principles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.principle-image{height:365px;width:100%;object-fit:cover;border-radius:10px;background:var(--surface-2)}.principle h3{margin:23px 0 10px;font-size:19px;line-height:1.18}.principle p{margin:0;color:#d0d1cb;font-size:15px}
+.impact-panel{display:grid;grid-template-columns:1fr 1fr;gap:74px;align-items:center;padding-top:42px}.impact-visual{min-height:520px;padding:36px;border-radius:18px;background:var(--surface);display:grid;align-content:center}.impact-visual h3{margin:0 0 26px;font-size:28px;letter-spacing:-.03em}.fields{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{display:grid;gap:6px}.field label{font-size:12px;font-weight:750;color:#d7d8d2}.field input,.field select{width:100%;height:46px;padding:0 12px;border:1px solid #595959;border-radius:9px;background:#181818;color:#fff}.field input:focus,.field select:focus{outline:2px solid var(--lime);outline-offset:1px}.impact-result{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-top:24px;padding-top:24px;border-top:1px solid #4a4a4a}.impact-result strong{display:block;color:var(--lime);font-size:44px;line-height:1;letter-spacing:-.05em}.impact-result span{display:block;margin-top:6px;color:#c5c6c0;font-size:13px}.mass-result{text-align:right}.mass-result strong{font-size:30px;color:#fff}
+.impact-copy .eyebrow{text-align:left}.impact-copy h2{margin:0;font-size:clamp(36px,4.3vw,52px)}.impact-copy p{max-width:580px;color:var(--muted);font-size:18px}.impact-copy .button{margin-top:12px}.disclosure{margin-top:22px!important;font-size:13px!important;color:#989a94!important}
+.story{padding:92px 0}.story-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:70px;align-items:center}.story-copy h2{margin:0 0 18px;font-size:clamp(34px,4vw,50px);line-height:1.08;letter-spacing:-.04em}.story-copy p{margin:0;color:#d0d1cb;font-size:17px}.story-photo{height:600px;width:100%;object-fit:cover;border-radius:16px}.credit{margin:9px 0 0;color:#8d8f89;font-size:11px}.credit a{text-underline-offset:3px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:66px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.stat{padding:30px 22px;text-align:center}.stat+.stat{border-left:1px solid var(--line)}.stat strong{display:block;color:var(--lime);font-size:31px}.stat span{display:block;color:#bfc0ba;font-size:13px}
+.search-intro{max-width:900px;margin:66px auto 0;padding:32px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}.search-intro h2{margin:0 0 14px;font-size:clamp(27px,3.4vw,40px);line-height:1.08;letter-spacing:-.035em}.search-intro p{margin:0;color:#c9cac4;font-size:16px}.search-intro p+p{margin-top:12px}.search-intro strong{color:#fff}
+.evidence{padding-top:84px}.source-list{max-width:900px;margin:0 auto;border-top:1px solid var(--line)}.source{display:grid;grid-template-columns:170px 1fr auto;gap:24px;padding:24px 0;border-bottom:1px solid var(--line);text-decoration:none}.source-org{color:var(--lime);font-size:12px;font-weight:800;text-transform:uppercase}.source strong{font-size:17px}.source span:nth-child(2){color:#d5d6d0}.source-arrow{width:18px;height:18px;filter:invert(91%) sepia(44%) saturate(742%) hue-rotate(21deg) brightness(105%)}.source:hover strong,.source:focus-visible strong{text-decoration:underline;text-underline-offset:4px}.source:focus-visible{outline:2px solid var(--lime);outline-offset:6px}
+.final-cta{padding:108px 0 120px;text-align:center}.final-cta h2{max-width:820px;margin:0 auto 30px;font-size:clamp(42px,5.5vw,68px);line-height:1.04;letter-spacing:-.05em}.final-cta p{max-width:620px;margin:0 auto 28px;color:var(--muted);font-size:18px}
+.footer{padding:64px 0 38px;border-top:1px solid var(--line)}.footer-grid{display:grid;grid-template-columns:1.4fr repeat(2,.7fr);gap:50px}.footer-brand{font-size:22px;font-weight:900}.footer-copy{max-width:540px;color:#9fa19a;font-size:13px}.footer h3{margin:0 0 14px;font-size:13px;text-transform:uppercase}.footer-links{display:grid;gap:9px}.footer-links a{color:#c7c8c2;font-size:14px;text-underline-offset:4px}.legal{margin:52px 0 0;padding-top:24px;border-top:1px solid var(--line);color:#878983;font-size:12px}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}.reveal.visible{opacity:1;transform:none}
+@media(max-width:940px){.shell{width:min(var(--max),calc(100% - 36px))}.principles{grid-template-columns:1fr 1fr}.principle-image{height:420px}.impact-panel,.story-grid{grid-template-columns:1fr;gap:46px}.impact-copy{max-width:700px}.story-copy{max-width:660px}.story-photo{height:560px}.stats{grid-template-columns:1fr 1fr}.stat:nth-child(3){border-left:0;border-top:1px solid var(--line)}.stat:nth-child(4){border-top:1px solid var(--line)}}
+@media(max-width:620px){.shell{width:calc(100% - 28px)}.sticky-nav{height:64px}.nav-link{display:none}.wordmark{position:static;transform:none;margin-right:auto}.button{padding:0 16px}.hero{min-height:760px}.hero-content{padding:108px 0 220px}.hero h1{font-size:38px}.hero-console{min-height:0;align-items:flex-start;flex-direction:column;padding:22px}.hero-console .button{width:100%}.console-title{font-size:18px}.hero-proof{bottom:54px;min-width:0;width:calc(100% - 28px);flex-direction:column;padding:8px 0}.proof-item{width:100%;padding:10px 18px}.proof-item+.proof-item{border-left:0;border-top:1px solid rgba(255,255,255,.2)}.section{padding:80px 0}.section-heading{text-align:left}.section h2,.section-lede{margin-left:0}.principles{grid-template-columns:1fr}.principle-image{height:420px}.impact-panel{padding-top:0}.impact-visual{min-height:0;padding:22px}.fields{grid-template-columns:1fr}.impact-result{align-items:flex-start;flex-direction:column}.mass-result{text-align:left}.story{padding:70px 0}.story-photo{height:440px}.stats{grid-template-columns:1fr}.stat+.stat,.stat:nth-child(3){border-left:0;border-top:1px solid var(--line)}.source{grid-template-columns:1fr auto;gap:8px 14px}.source-org{grid-column:1/-1}.source-arrow{grid-column:2;grid-row:2}.footer-grid{grid-template-columns:1fr}.final-cta{padding:84px 0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.button{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <img class="hero-image" src="assets/leaf-emblem.jpg" width="675" height="900" alt="Sunlight falling across real green leaves" fetchpriority="high">
+  <div class="hero-brand">TERA</div>
+  <div class="hero-content">
+    <h1 id="hero-title">Free past-paper booklets.<br>Less paper waste.</h1>
+    <div class="hero-console">
+      <div class="hero-console-copy"><span class="console-label">Free browser-based booklet maker</span><span class="console-title">Question papers in. Efficient booklet out.</span><span class="console-detail">Remove genuinely blank pages and pack useful mark-scheme pages clearly.</span></div>
+      <a class="button" href="TERA.html">Open TERA</a>
+    </div>
+  </div>
+  <div class="hero-proof" aria-label="TERA principles">
+    <div class="proof-item"><img class="proof-icon" src="assets/file-check.svg" alt=""><span><strong>Exact page reporting</strong><span>See source and output totals</span></span></div>
+    <div class="proof-item"><img class="proof-icon" src="assets/circle-check-big.svg" alt=""><span><strong>Review before printing</strong><span>Keep every useful page</span></span></div>
+  </div>
+  <button class="scroll-button" type="button" aria-label="Scroll to why TERA exists" data-scroll="#principles"><img src="assets/chevron-down.svg" alt=""></button>
+</section>
+
+<header class="sticky-nav">
+  <div class="shell nav-inner"><a class="wordmark" href="#top">TERA</a><a class="button" href="TERA.html">Compile booklets</a></div>
+</header>
+
+<main id="main">
+  <section class="section" id="principles" aria-labelledby="principles-title">
+    <div class="shell">
+      <div class="section-heading reveal"><p class="eyebrow">Why choose TERA?</p><h2 id="principles-title">What we stand for</h2></div>
+      <div class="principles reveal">
+        <article class="principle"><img class="principle-image" src="assets/student-study.jpg" width="1800" height="1200" alt="A student reading printed study material" loading="lazy"><h3>Practice stays complete</h3><p>Question-paper pages keep their original working space and readable scale.</p></article>
+        <article class="principle"><img class="principle-image" src="assets/paper-waste.jpg" width="1200" height="1800" alt="Discarded paper in an abandoned office" loading="lazy"><h3>Waste is made visible</h3><p>Every compilation reports its source pages, output pages, and calculated reduction.</p></article>
+        <article class="principle"><img class="principle-image" src="assets/leaf-emblem.jpg" width="675" height="900" alt="Real green leaves lit by sunlight" loading="lazy"><h3>Claims stay honest</h3><p>No universal trees-or-water figure is invented from a page count. Assumptions remain visible.</p></article>
+        <article class="principle"><img class="principle-image" src="assets/forest-sunlight.jpg" width="1800" height="1200" alt="Sunlight passing through a forest" loading="lazy"><h3>Access stays simple</h3><p>No account is required. Local PDFs are processed in the browser whenever possible.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="impact" aria-labelledby="impact-title">
+    <div class="shell impact-panel">
+      <form class="impact-visual reveal" id="impact-form">
+        <h3>Model a print run</h3>
+        <div class="fields">
+          <div class="field"><label for="students">Students</label><input id="students" type="number" min="1" max="1000000" value="100"></div>
+          <div class="field"><label for="booklets">Booklets each</label><input id="booklets" type="number" min="1" max="1000" value="10"></div>
+          <div class="field"><label for="source-pages">Source pages</label><input id="source-pages" type="number" min="1" max="1000" value="36"></div>
+          <div class="field"><label for="output-pages">TERA pages</label><input id="output-pages" type="number" min="1" max="1000" value="24"></div>
+          <div class="field"><label for="print-mode">Printing</label><select id="print-mode"><option value="2" selected>Duplex</option><option value="1">Single-sided</option></select></div>
+          <div class="field"><label for="paper-weight">Paper weight</label><select id="paper-weight"><option value="70">70 gsm</option><option value="80" selected>80 gsm</option><option value="90">90 gsm</option><option value="100">100 gsm</option></select></div>
+        </div>
+        <div class="impact-result" aria-live="polite"><span><strong id="sheets-result">6,000</strong><span>A4 sheets avoided</span></span><span class="mass-result"><strong id="mass-result">29.9 kg</strong><span>estimated paper mass</span></span></div>
+      </form>
+      <div class="impact-copy reveal"><p class="eyebrow">Transparent impact</p><h2 id="impact-title">We show the calculation, not a marketing fantasy.</h2><p>TERA can measure the printable pages it removes. The calculator converts a real scenario into sheets and paper mass, while separating those estimates from wider life-cycle impacts.</p><a class="button ghost" href="https://www.papercalculator.org/resources.html" rel="noreferrer">Read the methodology</a><p class="disclosure">This is a planning scenario, not verified real-world savings. Wider environmental effects depend on paper type, recycled content, mill, energy mix, and transport.</p></div>
+    </div>
+  </section>
+
+  <section class="story" aria-labelledby="story-title">
+    <div class="shell">
+      <div class="story-grid">
+        <div class="story-copy reveal"><p class="eyebrow">The paper problem</p><h2 id="story-title">Keep the learning. Remove what adds nothing.</h2><p>Paper remains essential in many classrooms. TERA does not shrink the student’s working space or remove questions. It targets genuinely blank pages, mark-scheme covers, and generic guidance, then packs the actual answers clearly.</p></div>
+        <figure class="reveal"><img class="story-photo" src="assets/student-study.jpg" width="1800" height="1200" alt="A student working with books and papers at a table" loading="lazy"><figcaption class="credit">Photo: <a href="https://unsplash.com/photos/4U3d6u_p-fE" rel="noreferrer">Sarah Noltner / Unsplash</a></figcaption></figure>
+      </div>
+      <div class="stats reveal" aria-label="TERA live usage totals"><div class="stat"><strong data-tera-stat="visitors">0</strong><span>people joined</span></div><div class="stat"><strong data-tera-stat="compilations">0</strong><span>practice booklets compiled</span></div><div class="stat"><strong data-tera-stat="pages">0</strong><span>printable pages avoided</span></div><div class="stat"><strong data-tera-stat="countries">0</strong><span>countries represented</span></div></div>
+      <div class="search-intro reveal"><h2>Past-paper booklet maker for Cambridge qualifications</h2><p>TERA currently supports verified Cambridge International catalog selections and your own permitted PDFs for <strong>AS &amp; A Level, O Level, and IGCSE</strong> practice. Students can build and download a free past-paper booklet PDF after reviewing the generated question-paper and compressed mark-scheme pages.</p><p><strong>Pearson Edexcel, AQA, OCR, IB, and other international boards are on the validation roadmap.</strong> They are not shown as live sources until their catalogs, document patterns, and usage conditions have been verified.</p></div>
+    </div>
+  </section>
+
+  <section class="section evidence" id="evidence" aria-labelledby="evidence-title">
+    <div class="shell"><div class="section-heading reveal"><p class="eyebrow">Research and transparency</p><h2 id="evidence-title">Inspect the evidence yourself</h2><p class="section-lede">The environmental story should be open to checking, including its assumptions and limits.</p></div>
+      <div class="source-list reveal">
+        <a class="source" href="https://www.fao.org/forestry/statistics/data/en" rel="noreferrer"><span class="source-org">FAO</span><span><strong>Global forest-products statistics</strong></span><img class="source-arrow" src="assets/external-link.svg" alt=""></a>
+        <a class="source" href="https://www.cambridge.org/core/journals/agricultural-and-resource-economics-review/article/effectiveness-of-a-green-default-nudge-in-achieving-resource-conservation/97B04652FAC85F94288CEE0C0EBAEC6E" rel="noreferrer"><span class="source-org">Cambridge Core</span><span><strong>Green default printing study</strong></span><img class="source-arrow" src="assets/external-link.svg" alt=""></a>
+        <a class="source" href="https://www.gov.uk/guidance/prevent-pollution-from-paper-and-cardboard-production" rel="noreferrer"><span class="source-org">Environment Agency</span><span><strong>Paper-production pollution guidance</strong></span><img class="source-arrow" src="assets/external-link.svg" alt=""></a>
+        <a class="source" href="https://www.papercalculator.org/resources.html" rel="noreferrer"><span class="source-org">Environmental Paper Network</span><span><strong>Paper Calculator methodology</strong></span><img class="source-arrow" src="assets/external-link.svg" alt=""></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta"><div class="shell reveal"><h2>Compile booklets.<br>Save paper.</h2><p>Bring material you are permitted to use, review every generated page, and print only what helps students practise.</p><a class="button" href="TERA.html">Open TERA</a></div></section>
+</main>
+
+<footer class="footer"><div class="shell"><div class="footer-grid"><div><div class="footer-brand">TERA</div><p class="footer-copy">An independent print-efficiency tool. TERA is not affiliated with or endorsed by an examination board or source website. It processes documents; it does not grant rights to their content.</p></div><div><h3>TERA</h3><nav class="footer-links"><a href="TERA.html">Compiler</a><a href="#impact">Impact model</a><a href="#evidence">Evidence</a></nav></div><div><h3>Project</h3><nav class="footer-links"><a href="NOTICE.html">Privacy &amp; use</a><a href="LICENSE">MIT license</a><a href="SUPPORT.md">Support</a><a href="THIRD_PARTY_NOTICES.md">Photo credits</a><a href="https://github.com/Abdulla-QsQs/TERA" rel="noreferrer">GitHub</a><a href="#top">Back to top</a></nav></div></div><p class="legal">Always review generated booklets before printing or sharing. Use only documents you are permitted to access and transform.</p></div></footer>
+
+<script>
+(() => {
+  const form = document.getElementById('impact-form');
+  const get = id => Math.max(0, Number(document.getElementById(id).value) || 0);
+  const format = new Intl.NumberFormat('en');
+  function calculate() {
+    const runs = get('students') * get('booklets');
+    const sides = get('print-mode') || 1;
+    const savedPerRun = Math.max(0, Math.ceil(get('source-pages') / sides) - Math.ceil(get('output-pages') / sides));
+    const sheets = Math.round(runs * savedPerRun);
+    const mass = sheets * .06237 * (get('paper-weight') || 80) / 1000;
+    document.getElementById('sheets-result').textContent = format.format(sheets);
+    document.getElementById('mass-result').textContent = mass < 100 ? `${mass.toFixed(1)} kg` : `${format.format(Math.round(mass))} kg`;
+  }
+  form.addEventListener('submit', event => event.preventDefault());
+  form.addEventListener('input', calculate);
+  calculate();
+  document.querySelector('[data-scroll]').addEventListener('click', event => document.querySelector(event.currentTarget.dataset.scroll).scrollIntoView({behavior:'smooth'}));
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+  else { const observer = new IntersectionObserver(entries => entries.forEach(entry => { if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}}),{threshold:.12}); document.querySelectorAll('.reveal').forEach(el=>observer.observe(el)); }
+})();
+</script>
+</body>
+</html>

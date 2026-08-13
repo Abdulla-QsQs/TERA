@@ -1,0 +1,17 @@
+.tera-wall-backdrop[hidden]{display:none}
+.tera-wall-backdrop{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;padding:18px;background:rgba(8,15,10,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-family:Arial,"Helvetica Neue",sans-serif;color:#f7f7f2;user-select:text}
+.tera-wall-card{width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid rgba(255,255,255,.32);border-radius:24px;background:#20231f;box-shadow:0 28px 90px rgba(0,0,0,.55)}
+.tera-wall-visual{position:relative;min-height:150px;display:grid;align-content:end;padding:25px;overflow:hidden;background:#2f6839 url("assets/leaf-emblem.jpg") center 45%/cover no-repeat}
+.tera-wall-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,40,20,.1),rgba(12,31,17,.85))}
+.tera-wall-brand,.tera-wall-visual h2{position:relative;z-index:1}.tera-wall-brand{margin:0 0 28px;font-size:14px;font-weight:900;letter-spacing:.08em}.tera-wall-visual h2{margin:0;font-size:clamp(28px,6vw,42px);line-height:1;letter-spacing:-.045em}
+.tera-wall-body{padding:25px}.tera-wall-intro{margin:0 0 20px;color:#c9cbc4;font-size:15px;line-height:1.55}
+.tera-wall-stats{display:grid;grid-template-columns:repeat(3,1fr);margin:0 0 22px;border:1px solid #454943;border-radius:13px;overflow:hidden;background:#191b18}
+.tera-wall-stat{padding:13px 10px;text-align:center}.tera-wall-stat+.tera-wall-stat{border-left:1px solid #454943}.tera-wall-stat strong{display:block;color:#dff47e;font-size:21px;line-height:1.1}.tera-wall-stat span{display:block;margin-top:5px;color:#aeb1aa;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.tera-wall-form{display:grid;gap:15px}.tera-wall-field{display:grid;gap:6px}.tera-wall-field label{font-size:12px;font-weight:800}.tera-wall-field small{color:#9fa39b;font-size:11px}
+.tera-wall-field input,.tera-wall-field select{width:100%;height:46px;padding:0 13px;border:1px solid #61655f;border-radius:10px;background:#151714;color:#fff;font:inherit}.tera-wall-field input:focus,.tera-wall-field select:focus{outline:2px solid #dff47e;outline-offset:1px;border-color:#dff47e}
+.tera-wall-consent{display:flex;align-items:flex-start;gap:10px;color:#c7cac2;font-size:12px;line-height:1.45}.tera-wall-consent input{width:17px;height:17px;margin:1px 0 0;accent-color:#dff47e}.tera-wall-consent a{color:#dff47e;text-underline-offset:3px}
+.tera-wall-submit{min-height:48px;border:0;border-radius:999px;background:#dff47e;color:#171917;font:800 15px Arial,"Helvetica Neue",sans-serif;cursor:pointer}.tera-wall-submit:hover,.tera-wall-submit:focus-visible{filter:brightness(1.06);outline:2px solid #fff;outline-offset:2px}.tera-wall-submit:disabled{opacity:.55;cursor:wait}
+.tera-wall-error{min-height:18px;margin:0;color:#ffb4ae;font-size:12px}.tera-wall-local{margin:8px 0 0;color:#92968f;font-size:10px;text-align:center}
+body.tera-wall-open{overflow:hidden}
+@media(max-width:520px){.tera-wall-backdrop{padding:0}.tera-wall-card{max-height:100vh;min-height:100vh;border:0;border-radius:0}.tera-wall-visual{min-height:136px}.tera-wall-body{padding:21px}.tera-wall-stats{grid-template-columns:1fr 1fr}.tera-wall-stat:nth-child(3){grid-column:1/-1;border-left:0;border-top:1px solid #454943}.tera-wall-visual h2{font-size:32px}}
+@media(prefers-reduced-motion:reduce){.tera-wall-backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}}

@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+tmp/
+*.log
+.DS_Store
+Thumbs.db
+
+# Local QA artifacts and copyrighted test inputs are never published.
+test-fixtures/
+test-output/
+output/
+design-evidence/

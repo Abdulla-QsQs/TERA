@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: %%TERA_PUBLIC_URL%%/sitemap.xml

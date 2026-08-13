@@ -1,0 +1,45 @@
+name: Bug report
+description: Report incorrect pairing, missing pages, layout problems, or app failures.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach copyrighted exam PDFs. Share the paper reference and describe the visible result.
+  - type: input
+    id: paper
+    attributes:
+      label: Paper reference
+      description: For example, 9700_s23_qp_21 and its mark scheme.
+  - type: dropdown
+    id: source
+    attributes:
+      label: Input method
+      options: [Catalog, Links, Local files]
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I checked the output visually and will not bulk-print it until the issue is resolved.
+          required: true

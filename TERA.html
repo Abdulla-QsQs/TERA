@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Compile permitted Cambridge A Level, O Level and IGCSE past papers and mark schemes into print-efficient PDF practice booklets.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="%%TERA_PUBLIC_URL%%/TERA.html">
+<link rel="stylesheet" href="wall.css">
+<script src="wall.js" defer></script>
+<title>TERA — Past Paper PDF Compiler</title>
+<script src="vendor/pdf-lib/pdf-lib.min.js"></script>
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="core.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;min-height:100%;
+  background:linear-gradient(160deg,#1a5b8f 0%,#1e6daa 40%,#1a527d 100%);
+  display:flex;align-items:center;justify-content:center;padding:8px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  font-size:12px;user-select:none;
+}
+/* WINDOW */
+.win{
+  width:620px;max-width:100%;background:#f0f0f0;
+  border:1px solid #868686;border-radius:6px 6px 4px 4px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.3) inset,0 4px 24px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;
+}
+/* TITLEBAR */
+.tb{
+  height:30px;flex-shrink:0;
+  background:linear-gradient(to bottom,#4d9de0 0%,#2b7cd3 8%,#1a6abf 50%,#1560b0 51%,#1a6abf 100%);
+  border-radius:5px 5px 0 0;border-bottom:1px solid #0d4d91;
+  display:flex;align-items:center;padding:0 6px 0 10px;
+  box-shadow:0 1px 0 rgba(255,255,255,.15) inset;
+}
+.tb-title{flex:1;color:#fff;font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.tb-btns{display:flex;gap:2px;}
+.tb-btn{
+  width:26px;height:20px;border-radius:3px;font-size:11px;
+  border:1px solid rgba(255,255,255,.35);color:#fff;
+  background:linear-gradient(to bottom,rgba(255,255,255,.25),rgba(255,255,255,.08));
+  display:flex;align-items:center;justify-content:center;cursor:default;
+}
+.tb-btn:hover{background:linear-gradient(to bottom,rgba(255,255,255,.4),rgba(255,255,255,.2));}
+.tb-btn.x:hover{background:linear-gradient(to bottom,#e8524a,#c0312a);border-color:rgba(255,255,255,.5);}
+/* BODY */
+.body{padding:12px;display:flex;flex-direction:column;gap:10px;}
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid #adadad;}
+.tab{
+  padding:5px 16px 6px;font-size:11px;cursor:pointer;
+  border:1px solid transparent;border-bottom:none;
+  margin-bottom:-1px;color:#666;border-radius:3px 3px 0 0;
+}
+.tab:focus-visible,.btn:focus-visible,.pdl:focus-visible,.drop-zone:focus-visible{outline:2px solid #1a6abf;outline-offset:1px;}
+.tab.active{
+  background:#f0f0f0;border-color:#adadad;color:#222;
+  font-weight:600;
+}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+/* GROUPBOX */
+.gb{border:1px solid #adadad;border-radius:3px;padding:6px 8px 8px;position:relative;margin-bottom:8px;}
+.gb-lbl{position:absolute;top:-8px;left:8px;background:#f0f0f0;padding:0 4px;font-size:11px;font-weight:600;color:#333;}
+/* TEXTAREA */
+.ta{
+  width:100%;height:88px;background:#fff;
+  border:1px solid #9a9a9a;border-top-color:#7a7a7a;border-left-color:#7a7a7a;
+  border-radius:2px;padding:5px 6px;font-family:'Consolas','Courier New',monospace;
+  font-size:10px;color:#111;resize:none;outline:none;line-height:1.5;
+  box-shadow:1px 1px 3px rgba(0,0,0,.08) inset;user-select:text;
+}
+.ta:focus{border-color:#4a9de0;box-shadow:0 0 0 2px rgba(74,157,224,.2),1px 1px 3px rgba(0,0,0,.08) inset;}
+.ta::placeholder{color:#aaa;font-style:italic;}
+/* BUTTONS */
+.brow{display:flex;gap:6px;align-items:center;margin-top:6px;}
+.btn{
+  height:24px;padding:0 14px;
+  border:1px solid #adadad;border-bottom-color:#8c8c8c;border-radius:3px;
+  background:linear-gradient(to bottom,#f8f8f8,#ebebeb 50%,#dedede 51%,#ebebeb);
+  color:#222;font-family:'Segoe UI',sans-serif;font-size:11px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset;
+}
+.btn:hover{background:linear-gradient(to bottom,#edf4fc,#d9ecfb 50%,#c6e4f9 51%,#d9ecfb);border-color:#7eb4ea;}
+.btn:active{background:linear-gradient(to bottom,#d2e9f8,#c3e2f7);box-shadow:1px 1px 2px rgba(0,0,0,.1) inset;}
+.btn:disabled{color:#aaa;background:linear-gradient(to bottom,#f4f4f4,#e8e8e8);cursor:default;border-color:#ccc;}
+.btn.pri{background:linear-gradient(to bottom,#4baee8,#2b99e0 50%,#1589ce 51%,#2b99e0);border-color:#1a78b0;color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.3);}
+.btn.pri:hover{background:linear-gradient(to bottom,#5bbdee,#3aa8e8 50%,#2598d8 51%,#3aa8e8);}
+.btn.pri:disabled{background:linear-gradient(to bottom,#a0c8e8,#8ab8d8);border-color:#7aaccc;color:rgba(255,255,255,.7);}
+.sp{flex:1;}
+.sm{font-size:10px;color:#888;}
+/* PAIRS LIST */
+.plist{max-height:130px;overflow-y:auto;background:#fff;border:1px solid #9a9a9a;border-top-color:#7a7a7a;border-left-color:#7a7a7a;border-radius:2px;box-shadow:1px 1px 3px rgba(0,0,0,.08) inset;}
+.plist::-webkit-scrollbar{width:12px;}
+.plist::-webkit-scrollbar-track{background:#f0f0f0;}
+.plist::-webkit-scrollbar-thumb{background:linear-gradient(to right,#cdcdcd,#c0c0c0);border:1px solid #aaa;}
+.prow{display:flex;align-items:center;padding:3px 8px;border-bottom:1px solid #f0f0f0;gap:6px;min-height:23px;}
+.prow:last-child{border-bottom:none;}
+.prow.proc{background:#fff8e6;}
+.prow.done{background:#f0fff4;}
+.prow.err{background:#fff0f0;}
+.plbl{flex:1;font-size:10px;color:#111;font-family:'Consolas',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pbadge{font-size:9px;padding:1px 5px;border-radius:2px;font-weight:700;letter-spacing:.05em;flex-shrink:0;}
+.b-ok{background:#e0f4e0;color:#2a7a2a;border:1px solid #9fdf9f;}
+.b-miss{background:#fde8e8;color:#9a2020;border:1px solid #f0aaaa;}
+.b-proc{background:#fff3cd;color:#856404;border:1px solid #ffc107;}
+.b-done{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.pprog{width:80px;height:8px;background:#e0e0e0;border:1px solid #ccc;border-radius:1px;overflow:hidden;display:none;flex-shrink:0;}
+.pprog-fill{height:100%;background:linear-gradient(to right,#2b99e0,#4baee8);transition:width .3s ease;width:0%;}
+.pprog-fill.done{background:linear-gradient(to right,#28a745,#48c765);width:100%;}
+.pdl{font-size:10px;padding:1px 8px;height:18px;border:1px solid #adadad;border-radius:2px;background:linear-gradient(to bottom,#f8f8f8,#e8e8e8);color:#333;cursor:pointer;display:none;flex-shrink:0;}
+.pdl.vis{display:flex;align-items:center;gap:3px;}
+.pdl:hover{background:linear-gradient(to bottom,#edf4fc,#d9ecfb);border-color:#7eb4ea;}
+.pempty{padding:16px;text-align:center;color:#aaa;font-size:11px;font-style:italic;}
+/* MAIN PROGRESS */
+.mprog{height:13px;background:#e0e0e0;border:1px solid #b8b8b8;border-top-color:#a0a0a0;border-left-color:#a0a0a0;border-radius:2px;overflow:hidden;display:none;box-shadow:1px 1px 2px rgba(0,0,0,.08) inset;margin-top:6px;}
+.mprog.vis{display:block;}
+.mprog-fill{
+  height:100%;width:0%;transition:width .4s ease;position:relative;overflow:hidden;
+  background:linear-gradient(to bottom,#58c0f0,#2b99e0 45%,#1589ce 50%,#2b99e0 55%,#58c0f0);
+}
+.mprog-fill::after{content:'';position:absolute;top:0;left:-40px;right:-40px;bottom:0;background:repeating-linear-gradient(60deg,transparent,transparent 8px,rgba(255,255,255,.12) 8px,rgba(255,255,255,.12) 16px);animation:sh 1.2s linear infinite;}
+@keyframes sh{from{transform:translateX(0)}to{transform:translateX(32px)}}
+/* LOG */
+.log{height:90px;background:#1e1e1e;border:1px solid #555;border-top-color:#333;border-left-color:#333;border-radius:2px;padding:5px 7px;overflow-y:auto;box-shadow:1px 1px 3px rgba(0,0,0,.15) inset;}
+.log::-webkit-scrollbar{width:10px;}
+.log::-webkit-scrollbar-track{background:#2d2d2d;}
+.log::-webkit-scrollbar-thumb{background:#555;border-radius:2px;}
+.ll{font-family:'Consolas','Courier New',monospace;font-size:10px;line-height:1.6;display:flex;gap:8px;}
+.lt{color:#666;flex-shrink:0;}
+.lm{}
+.ll.info .lm{color:#ccc;}
+.ll.ok .lm{color:#4ec94e;}
+.ll.warn .lm{color:#f0c040;}
+.ll.err .lm{color:#f06060;}
+.ll.dim .lm{color:#666;}
+.ll.bold .lm{color:#fff;font-weight:bold;}
+/* STATUS */
+.sb{
+  height:22px;background:#f0f0f0;border-top:1px solid #b8b8b8;border-radius:0 0 4px 4px;
+  display:flex;align-items:center;padding:0 8px;gap:6px;flex-shrink:0;
+}
+.stxt{font-size:10.5px;color:#444;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ssep{width:1px;height:12px;background:#c0c0c0;box-shadow:1px 0 0 #fff;}
+.sbrand{
+  font-size:10.5px;font-weight:400;letter-spacing:.2em;
+  color:#00ff41;flex-shrink:0;
+  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+  text-shadow:0 0 1px rgba(0,255,65,1),0 0 3px rgba(0,255,65,.6),0 0 6px rgba(0,255,65,.2);
+}
+.sclock{font-size:10px;color:#888;font-family:'Consolas',monospace;flex-shrink:0;}
+.snotice{font-size:9px;color:#555;text-decoration:none;white-space:nowrap;}
+.snotice:hover,.snotice:focus-visible{color:#1a6abf;text-decoration:underline;outline:none;}
+/* FILE DROP */
+.drop-zone{
+  border:2px dashed #adadad;border-radius:4px;padding:12px;text-align:center;
+  color:#888;font-size:11px;cursor:pointer;transition:all .2s;
+  background:#fafafa;
+}
+.drop-zone:hover,.drop-zone.over{border-color:#4a9de0;color:#2b7cd3;background:#f0f7ff;}
+.drop-zone input{display:none;}
+.file-list{margin-top:8px;max-height:80px;overflow-y:auto;}
+.file-row{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:10px;font-family:'Consolas',monospace;}
+.file-badge{font-size:9px;padding:1px 5px;border-radius:2px;font-weight:700;}
+/* CATALOG SELECTOR — follows the original compact Windows-style controls */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;}
+.cf{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.cf.wide{grid-column:1/-1;}
+.cf label{font-size:9px;color:#666;}
+.sel,.inp{
+  width:100%;height:23px;background:#fff;color:#222;
+  border:1px solid #9a9a9a;border-top-color:#7a7a7a;border-left-color:#7a7a7a;
+  border-radius:2px;padding:1px 5px;font-family:'Segoe UI',sans-serif;font-size:10px;outline:none;
+  box-shadow:1px 1px 2px rgba(0,0,0,.06) inset;user-select:text;
+}
+.sel:focus,.inp:focus{border-color:#4a9de0;box-shadow:0 0 0 2px rgba(74,157,224,.16);}
+.catrow{display:grid;grid-template-columns:70px 70px 1fr 1fr;gap:6px;margin-top:6px;align-items:end;}
+.checks{height:23px;display:flex;align-items:center;gap:9px;white-space:nowrap;}
+.checks label{display:flex;align-items:center;gap:3px;color:#333;font-size:10px;cursor:pointer;}
+.checks input{width:12px;height:12px;}
+.chint{font-size:9px;color:#888;margin-top:5px;line-height:1.35;min-height:12px;}
+@media (max-width:620px){
+  html,body{align-items:flex-start;overflow:auto;}
+  .body{padding:8px;}
+  .cgrid,.catrow{grid-template-columns:1fr 1fr;}
+  .catrow .cf:nth-child(n+3){grid-column:auto;}
+  .brow{flex-wrap:wrap;}
+  .pprog{width:50px;}
+}
+</style>
+</head>
+<body>
+<div class="win">
+
+  <!-- TITLEBAR -->
+  <div class="tb">
+    <span style="margin-right:6px;font-size:13px;">📄</span>
+    <span class="tb-title">TERA — Past Paper Compiler</span>
+    <div class="tb-btns" aria-hidden="true">
+      <div class="tb-btn">–</div>
+      <div class="tb-btn">□</div>
+      <div class="tb-btn x" onclick="if(confirm('Close TERA?'))window.close()">✕</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- TABS -->
+    <div class="tabs" role="tablist" aria-label="Paper sources">
+      <div class="tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-catalog" onclick="switchTab('catalog',this)" onkeydown="tabKey(event,'catalog',this)">📚 Catalog</div>
+      <div class="tab" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-links" onclick="switchTab('links',this)" onkeydown="tabKey(event,'links',this)">🔗 From Links</div>
+      <div class="tab" role="tab" tabindex="0" aria-selected="false" aria-controls="tab-files" onclick="switchTab('files',this)" onkeydown="tabKey(event,'files',this)">📁 Local Files</div>
+    </div>
+
+    <!-- TAB: CATALOG -->
+    <div class="tab-panel active" id="tab-catalog">
+      <div class="gb" style="margin-top:8px;">
+        <span class="gb-lbl">Custom Booklet Catalog</span>
+        <div class="cgrid">
+          <div class="cf"><label for="catBoard">Exam board</label><select class="sel" id="catBoard" onchange="catalogBoardChanged()"></select></div>
+          <div class="cf"><label for="catQual">Qualification</label><select class="sel" id="catQual" onchange="catalogQualificationChanged()"></select></div>
+          <div class="cf wide"><label for="catSubject">Subject</label><select class="sel" id="catSubject" onchange="catalogSubjectChanged()"></select></div>
+        </div>
+        <div class="catrow">
+          <div class="cf"><label for="catFrom">From year</label><input class="inp" id="catFrom" type="number" min="2000" max="2026" value="2020"></div>
+          <div class="cf"><label for="catTo">To year</label><input class="inp" id="catTo" type="number" min="2000" max="2026" value="2023"></div>
+          <div class="cf"><label for="catPapers">Paper(s)</label><input class="inp" id="catPapers" value="2" placeholder="e.g. 1,2"></div>
+          <div class="cf"><label for="catVariants">Variant(s)</label><input class="inp" id="catVariants" value="1,2,3" placeholder="e.g. 1,2,3"></div>
+        </div>
+        <div class="brow">
+          <div class="checks" aria-label="Exam sessions">
+            <label><input type="checkbox" id="catFM">FM</label>
+            <label><input type="checkbox" id="catMJ" checked>MJ</label>
+            <label><input type="checkbox" id="catON" checked>ON</label>
+          </div>
+          <button class="btn pri" id="btnCatalogAdd" onclick="addCatalogSelection()">＋ Add Selection</button>
+          <button class="btn" onclick="clearCatalogPairs()">✕ Remove Catalog</button>
+          <span class="sp"></span>
+          <span class="sm" id="catalogCount"></span>
+        </div>
+        <div class="chint" id="catalogHint"></div>
+      </div>
+    </div>
+
+    <!-- TAB: LINKS -->
+    <div class="tab-panel" id="tab-links">
+      <div class="gb" style="margin-top:8px;">
+        <span class="gb-lbl">Link Dump</span>
+        <textarea class="ta" id="linkInput"
+          placeholder="Paste permitted QP and MS PDF links here — one per line.&#10;The public relay currently allows the PapaCambridge catalog host only.&#10;Auto-pairs QP ↔ MS by paper code (e.g. 9702_s25_qp_22)."
+          spellcheck="false"></textarea>
+        <div class="brow">
+          <button class="btn" id="btnParse" onclick="parseLinks()">🔍 Parse Links</button>
+          <button class="btn" id="btnClear" onclick="clearAll()">✕ Clear</button>
+          <span class="sp"></span>
+          <span class="sm" id="linkCount"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LOCAL FILES -->
+    <div class="tab-panel" id="tab-files">
+      <div class="gb" style="margin-top:8px;">
+        <span class="gb-lbl">Drop or Select PDFs</span>
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Select PDF files" onclick="document.getElementById('fileInput').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInput').click()}"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="handleDrop(event)">
+          <input type="file" id="fileInput" multiple accept=".pdf" onchange="handleFiles(this.files)">
+          <div>📂 Click to select PDFs <span style="color:#bbb">— or drag &amp; drop</span></div>
+          <div style="font-size:10px;color:#bbb;margin-top:4px;">Name files like: <code>9702_s25_qp_22.pdf</code> and <code>9702_s25_ms_22.pdf</code></div>
+        </div>
+        <div class="file-list" id="fileList"></div>
+        <div class="brow">
+          <button class="btn" id="btnPairLocal" onclick="pairLocalFiles()" disabled>🔍 Pair Files</button>
+          <button class="btn" onclick="clearLocalFiles()">✕ Clear</button>
+          <span class="sp"></span>
+          <span class="sm" id="localCount"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAIRS -->
+    <div class="gb">
+      <span class="gb-lbl">Detected Pairs</span>
+      <div class="plist" id="pairsList">
+        <div class="pempty" id="pairsEmpty">No pairs yet — parse links or load local files</div>
+      </div>
+      <div class="brow" style="margin-top:8px;">
+        <button class="btn pri" id="btnCompile" onclick="compileAll()" disabled>▶ Compile All</button>
+        <button class="btn" id="btnMega" onclick="downloadMega()" disabled>↓ Mega PDF</button>
+        <span class="sp"></span>
+        <span class="sm" id="pairCount"></span>
+      </div>
+      <div class="mprog" id="mainProg" role="progressbar" aria-label="Compilation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="mprog-fill" id="mainProgFill"></div></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="gb">
+      <span class="gb-lbl">Activity Log</span>
+      <div class="log" id="logArea" role="log" aria-live="polite" aria-relevant="additions">
+        <div class="ll dim"><span class="lt">--:--:--</span><span class="lm">TERA ready. Catalog: choose papers. Links: paste URLs. Files: drop PDFs.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="sb">
+    <div class="stxt" id="statusText" role="status" aria-live="polite">Ready</div>
+    <div class="ssep"></div>
+    <a class="snotice" href="NOTICE.html" target="_blank" rel="noopener">Privacy &amp; Use</a>
+    <div class="ssep"></div>
+    <div class="sbrand">ZER0CTRL</div>
+    <div class="ssep"></div>
+    <div class="sclock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'vendor/pdfjs/pdf.worker.min.mjs';
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let detectedPairs  = [];
+let compiledBlobs  = {};   // pairKey → Uint8Array
+let compiledStats  = {};   // pairKey → transparent page-reduction totals
+let busy           = false;
+let megaBusy       = false;
+const thresholdPDFCache = new Map(); // grade-threshold URL → fetched bytes
+
+// ═══════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  el.setAttribute('aria-selected', 'true');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function tabKey(event, name, el) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  switchTab(name, el);
+}
+
+// ═══════════════════════════════════════════
+//  FETCH POOL — use only TERA's restricted same-origin relay. No anonymous
+//  third-party proxy or direct browser fallback sees the requested paper URL.
+// ═══════════════════════════════════════════
+const FETCH_ROUTES = [
+  {
+    name: 'TERA server', timeout: 45000,
+    url: () => /^https?:$/.test(location.protocol) ? `${location.origin}/api/pdf` : null,
+    init: u => ({ method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/pdf' }, body:JSON.stringify({ url:u }) })
+  },
+];
+let workingRouteIdx = null; // reuse a successful route first
+const MAX_PDF_BYTES = 25 * 1024 * 1024;
+
+async function fetchPDF(url) {
+  const order = workingRouteIdx !== null
+    ? [workingRouteIdx, ...[...Array(FETCH_ROUTES.length).keys()].filter(i=>i!==workingRouteIdx)]
+    : [...Array(FETCH_ROUTES.length).keys()];
+  let lastErr;
+  for (const i of order) {
+    const route = FETCH_ROUTES[i];
+    const routeUrl = route.url(url);
+    if (!routeUrl) continue;
+    const routeName = route.name;
+    const cached    = (i === workingRouteIdx);
+    let tid = null;
+    try {
+      log('  ' + (cached ? '↩ Reusing route ('+routeName+')…' : 'Trying route ('+routeName+')…'), 'dim');
+      const ctrl = new AbortController();
+      tid = setTimeout(() => ctrl.abort(), route.timeout);
+      const resp = await fetch(routeUrl, { ...route.init(url), signal: ctrl.signal });
+      clearTimeout(tid);
+      tid = null;
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const buf   = await resp.arrayBuffer();
+      if (buf.byteLength < 500) throw new Error('Response too small');
+      if (buf.byteLength > MAX_PDF_BYTES) throw new Error('PDF is larger than 25 MB');
+      const bytes = new Uint8Array(buf);
+      if (bytes[0]!==0x25||bytes[1]!==0x50||bytes[2]!==0x44||bytes[3]!==0x46)
+        throw new Error('Not a valid PDF (bad header)');
+      log('  ✓ ' + routeName + ' — ' + (buf.byteLength/1024).toFixed(0) + ' KB', 'dim');
+      workingRouteIdx = i;
+      return bytes;
+    } catch (e) {
+      if (tid) clearTimeout(tid);
+      lastErr = e;
+      log('  ✗ ' + routeName + ': ' + e.message, 'dim');
+      if (cached) workingRouteIdx = null;
+      await sleep(500);
+    }
+  }
+  throw new Error('PDF source unavailable: ' + lastErr?.message);
+}
+
+// ═══════════════════════════════════════════
+//  URL PARSING
+// ═══════════════════════════════════════════
+const parseSubjectList = source => source.split(';').map(item => {
+  const [code, name] = item.split('|');
+  return { code: code.trim(), name: name.trim() };
+});
+
+// Qualification catalog. Cambridge has a deterministic PapaCambridge file
+// adapter and is live. Other boards are represented here as first-class data
+// families; their archives use irregular filenames, so their exact verified
+// URL manifests can be added without changing the selector or compiler.
+const CATALOG = {
+  caie: {
+    name: 'Cambridge International', adapter: 'caie',
+    qualifications: {
+      alevel: { name: 'AS & A Level', subjects: parseSubjectList(
+        '9706|Accounting;8679|Afrikaans - Language (AS);9680|Arabic;8680|Arabic - Language (AS);9479|Art & Design;9484|Biblical Studies;9700|Biology;9609|Business;9701|Chemistry;9868|Chinese - Language & Literature;8238|Chinese Language (AS);9274|Classical Studies;9618|Computer Science;9705|Design & Technology;9481|Digital Media & Design;9482|Drama;9708|Economics;8695|English - Language and Literature;9695|English Literature;8021|English General Paper;9093|English Language;8291|Environmental Management;9981|European History;9898|French Language & Literature;8028|French Language;9696|Geography;8027|German - Language;9897|German Language & Literature;9239|Global Perspectives & Research;9487|Hinduism;9489|History;9626|Information Technology;9982|International History;9488|Islamic Studies;9084|Law;9693|Marine Science;9709|Mathematics;9231|Mathematics - Further;9607|Media Studies;9483|Music;9702|Physics;8684|Portuguese - Language;9718|Portuguese;9990|Psychology;9699|Sociology;9844|Spanish - Language & Literature;8022|Spanish Language;8386|Sport & Physical Education;9689|Tamil;8689|Tamil - Language;9694|Thinking Skills;9395|Travel & Tourism;8686|Urdu - Language;9686|Urdu - Pakistan;9866|Urdu Language & Literature;8102|US History since 1877;8101|US History to 1877'
+      )},
+      igcse: { name: 'IGCSE', subjects: parseSubjectList(
+        '0452|Accounting;0985|Accounting (9-1);0548|Afrikaans - Second Language;0600|Agriculture;0508|Arabic - First Language;7184|Arabic - First Language (9-1);0544|Arabic - Foreign Language;7180|Arabic (9-1);0400|Art & Design;0989|Art & Design (9-1);0538|Bahasa Indonesia;0610|Biology;0970|Biology (9-1);0264|Business;0774|Business (9-1);0450|Business Studies;0986|Business Studies (9-1);0620|Chemistry;0971|Chemistry (9-1);0509|Chinese - First Language;0523|Chinese - Second Language;0547|Chinese (Mandarin) - Foreign Language;0715|Commerce;0478|Computer Science;0984|Computer Science (9-1);0445|Design & Technology;0979|Design & Technology (9-1);0411|Drama;0994|Drama (9-1);0455|Economics;0987|Economics (9-1);0500|English - First Language;0990|English - First Language (9-1);0524|English - First Language (US);0475|Literature in English;0992|Literature in English (9-1);0472|English as an Additional Language;0772|English as an Additional Language (9-1);0465|English (Core) as a Second Language;0511|English as a Second Language (Count-in speaking);0991|English as a Second Language (9-1);0510|English as a Second Language;0993|English as a Second Language (9-1);0454|Enterprise;0680|Environmental Management;0648|Food & Nutrition;0501|French - First Language;0520|French - Foreign Language;7156|French (9-1);0460|Geography;0976|Geography (9-1);0505|German - First Language;0525|German - Foreign Language;7159|German (9-1);0457|Global Perspectives;0549|Hindi as a Second Language;0470|History;0409|History - American (US);0977|History (9-1);0417|Information and Communication Technology;0983|Information and Communication Technology (9-1);0531|IsiZulu as a Second Language;0493|Islamiyat;0535|Italian - Foreign Language;7164|Italian (9-1);0716|Japanese - Foreign Language;0480|Latin;0696|Malay - First Language;0546|Malay - Foreign Language;0697|Marine Science;0580|Mathematics;0606|Mathematics - Additional;0607|Mathematics - International;0980|Mathematics (9-1);0444|Mathematics (US);0410|Music;0978|Music (9-1);0448|Pakistan Studies;0413|Physical Education;0995|Physical Education (9-1);0652|Physical Science;0625|Physics;0972|Physics (9-1);0504|Portuguese - First Language;0266|Psychology;0490|Religious Studies;0499|Sanskrit;0653|Science - Combined;0973|Sciences - Co-ordinated (9-1);0654|Sciences - Co-ordinated (Double);0698|Setswana - First Language;0495|Sociology;0502|Spanish - First Language;0530|Spanish - Foreign Language;0474|Spanish - Literature;7160|Spanish (9-1);0479|Statistics;0262|Swahili;0518|Thai - First Language;0471|Travel & Tourism;0513|Turkish - First Language;0539|Urdu as a Second Language;0695|Vietnamese - First Language;0408|World Literature'
+      )},
+      olevel: { name: 'O Level', subjects: parseSubjectList(
+        '7707|Accounting;3180|Arabic;6090|Art & Design;7094|Bangladesh Studies;3204|Bengali;2035|Biblical Studies;5090|Biology;7081|Business;7115|Business Studies;5070|Chemistry;7100|Commerce;2210|Computer Science;2281|Economics;1123|English Language;5014|Environmental Management;6130|Fashion & Textiles;6065|Food & Nutrition;2217|Geography;2069|Global Perspectives;2147|History;2068|Islamic Studies;2058|Islamiyat;2010|Literature in English;4037|Mathematics - Additional;4024|Mathematics (Syllabus D);2059|Pakistan Studies;5054|Physics;5129|Science - Combined;3205|Sinhala;2251|Sociology;4040|Statistics;3226|Tamil;3247|Urdu - First Language;3248|Urdu - Second Language'
+      )}
+    }
+  },
+  pearson: {
+    name: 'Pearson Edexcel', adapter: 'manifest',
+    qualifications: {
+      ial: { name: 'International AS & A Level', subjects: parseSubjectList(
+        'WAC|Accounting;WAA|Arabic;WBI|Biology;WBS|Business;WCH|Chemistry;WEC|Economics;WEN|English Language;WET|English Literature;WFR|French;WFM|Further Mathematics;WGE|Geography;WGN|German;WHI|History;WIT|Information Technology;WLA|Law;WMA|Mathematics;WPH|Physics;WPS|Psychology;WSP|Spanish'
+      )},
+      igcse: { name: 'International GCSE', subjects: parseSubjectList(
+        '4AC1|Accounting;4AA1|Arabic (First Language);4FA0|Art and Design;4BA0|Bangla;4BN0|Bangladesh Studies;4BI1|Biology;4BS1|Business;4CH1|Chemistry;4CN1|Chinese;4CM1|Commerce;4CP0|Computer Science;4EC1|Economics;4ES1|English as a Second Language;4EA1|English Language A;4EB1|English Language B;4ET1|English Literature;4FR1|French;4PM1|Further Pure Mathematics;4GE1|Geography;4GN1|German;4GL1|Global Citizenship;4GK1|Greek (First Language);4HI1|History;4HB1|Human Biology;4IT1|Information and Communication Technology;4IS1|Islamic Studies;4MA1|Mathematics A;4MB1|Mathematics B;4PA1|Pakistan Studies;4PH1|Physics;4RS1|Religious Studies;4SC1|Science (Double Award);4SS0|Science (Single Award);4SI1|Sinhala;4SP1|Spanish;4SW1|Swahili;4TA1|Tamil'
+      )},
+      gce: { name: 'UK AS & A Level', subjects: parseSubjectList('9AA0|Arabic;9BN0|Bangla;9BI0|Biology;9BS0|Business;9CH0|Chemistry;9CN0|Chinese;9CP0|Computer Science;9EC0|Economics;9EN0|English Language;9ET0|English Literature;9FR0|French;9GE0|Geography;9GN0|German;9HI0|History;9MA0|Mathematics;9FM0|Further Mathematics;9PH0|Physics;9PL0|Politics;9PS0|Psychology;9RS0|Religious Studies;9SP0|Spanish;9ST0|Statistics')},
+      gcse: { name: 'UK GCSE', subjects: parseSubjectList('1AA0|Arabic;1BI0|Biology;1BS0|Business;1CH0|Chemistry;1CP2|Computer Science;1EC0|Economics;1EN0|English Language;1ET0|English Literature;1FR0|French;1GE0|Geography;1GN0|German;1HI0|History;1MA1|Mathematics;1PH0|Physics;1PS0|Psychology;1RS0|Religious Studies;1SC0|Combined Science;1SP0|Spanish;1ST0|Statistics')}
+    }
+  },
+  oxfordaqa: {
+    name: 'OxfordAQA International', adapter: 'manifest',
+    qualifications: {
+      ial: { name: 'International AS & A Level', subjects: parseSubjectList('9615|Accounting;9610|Biology;9725|Business;9620|Chemistry;9680|Chinese - First Language;9645|Computer Science;9640|Economics;9670|English Language;9675|English Literature;9665|Further Mathematics;9635|Geography;9660|Mathematics;9630|Physics;9685|Psychology;9690|Sociology;9695|International EPQ')},
+      igcse: { name: 'International GCSE', subjects: parseSubjectList('9215|Accounting;9267|Arabic - First Language;9268|Bangla;9201|Biology;9221|CORE Biology;9225|Business;9202|Chemistry;9222|CORE Chemistry;9263|Chinese - First Language;9204|Combined Science;9210|Computer Science;9252|Design and Technology;9213|Digital and Information Technology;9214|Economics;9280|English as a Second Language;9285|CORE English as a Second Language;9270|English Language;9275|English Literature;9265|French;9230|Geography;9245|History;9237|Islamiat;9260|Mathematics;9257|Media Studies;9236|Pakistan Studies;9203|Physics;9223|CORE Physics;9218|Psychology;9292|Sociology;9269|Spanish;9264|Urdu')}
+    }
+  },
+  aqa: { name: 'AQA (UK)', adapter: 'manifest', qualifications: {
+    alevel:{name:'AS & A Level',subjects:parseSubjectList('ACC|Accounting;ART|Art & Design;BIO|Biology;BUS|Business;CHE|Chemistry;CSC|Computer Science;ECO|Economics;ENG|English;GEO|Geography;HIS|History;LAW|Law;MAT|Mathematics;FMA|Further Mathematics;MED|Media Studies;PHY|Physics;POL|Politics;PSY|Psychology;SOC|Sociology')},
+    gcse:{name:'GCSE',subjects:parseSubjectList('ART|Art & Design;BIO|Biology;BUS|Business;CHE|Chemistry;CSC|Computer Science;ECO|Economics;ENG|English;FRE|French;GEO|Geography;GER|German;HIS|History;MAT|Mathematics;PHY|Physics;PSY|Psychology;SCI|Combined Science;SOC|Sociology;SPA|Spanish')}
+  }},
+  ocr: { name: 'OCR (UK)', adapter: 'manifest', qualifications: {
+    alevel:{name:'AS & A Level',subjects:parseSubjectList('H420|Biology A;H422|Biology B;H431|Chemistry A;H433|Chemistry B;H446|Computer Science;H460|Economics;H470|English Language;H472|English Literature;H481|Geography;H505|History A;H556|Mathematics A;H640|Mathematics B;H245|Further Mathematics A;H635|Further Mathematics B;H556P|Physics A;H557|Physics B;H567|Psychology;H580|Sociology')},
+    gcse:{name:'GCSE',subjects:parseSubjectList('J247|Biology A;J257|Biology B;J248|Chemistry A;J258|Chemistry B;J277|Computer Science;J205|Economics;J351|English Language;J352|English Literature;J383|Geography A;J384|Geography B;J410|History A;J560|Mathematics;J249|Physics A;J259|Physics B;J250|Combined Science A;J260|Combined Science B')}
+  }},
+  wjec: { name: 'WJEC / Eduqas (UK)', adapter: 'manifest', qualifications: {
+    alevel:{name:'AS & A Level',subjects:parseSubjectList('BIO|Biology;BUS|Business;CHE|Chemistry;CSC|Computer Science;ECO|Economics;ENG|English;GEO|Geography;HIS|History;LAW|Law;MAT|Mathematics;FMA|Further Mathematics;MED|Media Studies;PHY|Physics;POL|Politics;PSY|Psychology;SOC|Sociology')},
+    gcse:{name:'GCSE',subjects:parseSubjectList('BIO|Biology;BUS|Business;CHE|Chemistry;CSC|Computer Science;ECO|Economics;ENG|English;FRE|French;GEO|Geography;GER|German;HIS|History;MAT|Mathematics;PHY|Physics;SCI|Combined Science;SOC|Sociology;SPA|Spanish')}
+  }}
+};
+
+const SUBJECTS = {};
+Object.values(CATALOG).forEach(board => Object.values(board.qualifications).forEach(qualification => {
+  qualification.subjects.forEach(subject => { if (!SUBJECTS[subject.code]) SUBJECTS[subject.code] = subject.name; });
+}));
+const SESS = {'s':'MJ','w':'ON','m':'FM'};
+const CAIE_PAPA_BASE = 'https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/';
+
+function catalogOption(select, value, label) {
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = label;
+  select.appendChild(option);
+}
+
+function initCatalog() {
+  const boardSelect = document.getElementById('catBoard');
+  boardSelect.replaceChildren();
+  Object.entries(CATALOG).forEach(([key, board]) => catalogOption(boardSelect, key, board.name));
+  boardSelect.value = 'caie';
+  catalogBoardChanged();
+}
+
+function catalogBoardChanged() {
+  const board = CATALOG[document.getElementById('catBoard').value];
+  const select = document.getElementById('catQual');
+  select.replaceChildren();
+  Object.entries(board.qualifications).forEach(([key, q]) => catalogOption(select, key, q.name));
+  catalogQualificationChanged();
+}
+
+function catalogQualificationChanged() {
+  const board = CATALOG[document.getElementById('catBoard').value];
+  const qualification = board.qualifications[document.getElementById('catQual').value];
+  const select = document.getElementById('catSubject');
+  select.replaceChildren();
+  qualification.subjects.slice().sort((a,b) => a.name.localeCompare(b.name)).forEach(subject => {
+    catalogOption(select, subject.code, `${subject.name} — ${subject.code}`);
+  });
+  catalogSubjectChanged();
+}
+
+function catalogSubjectChanged() {
+  const board = CATALOG[document.getElementById('catBoard').value];
+  const live = board.adapter === 'caie';
+  document.getElementById('btnCatalogAdd').disabled = !live;
+  document.getElementById('catalogHint').textContent = live
+    ? 'Live catalog: exact QP, MS and grade-threshold URLs are generated from the selected components. Ranges such as 1-3 are accepted.'
+    : `${board.name} subject catalog is loaded. Exact historical paper URLs require its verified manifest before selection can compile.`;
+}
+
+function parseNumberSelection(value, min, max) {
+  return TeraCore.parseNumberSelection(value, min, max);
+}
+
+function caiePaperUrl(code, session, year, type, component) {
+  return TeraCore.caiePaperUrl(CAIE_PAPA_BASE, code, session, year, type, component);
+}
+
+function caieThresholdUrl(code, session, year) {
+  return TeraCore.caieThresholdUrl(CAIE_PAPA_BASE, code, session, year);
+}
+
+async function extractComponentThreshold(gtBytes, pair) {
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(gtBytes.slice(0)) });
+  const pdfDoc = await loadingTask.promise;
+  try {
+    const lines = [];
+    for (let pageNo = 1; pageNo <= pdfDoc.numPages; pageNo++) {
+      const page = await pdfDoc.getPage(pageNo);
+      const items = (await page.getTextContent()).items.filter(item => item.str.trim());
+      const rows = new Map();
+      items.forEach(item => {
+        const y = Math.round((item.transform?.[5] || 0) * 2) / 2;
+        if (!rows.has(y)) rows.set(y, []);
+        rows.get(y).push({ x:item.transform?.[4] || 0, text:item.str.trim() });
+      });
+      [...rows.entries()].sort((a,b) => b[0] - a[0]).forEach(([, row]) => {
+        lines.push(row.sort((a,b) => a.x - b.x).map(item => item.text).join(' ').replace(/\s+/g, ' ').trim());
+      });
+    }
+    const component = String(pair.component).replace(/\D/g, '');
+    const grades = pair.grades || (pair.qualification === 'igcse' && /\(9-1\)/.test(pair.subjectName || '')
+      ? ['9','8','7','6','5','4','3','2','1']
+      : pair.qualification === 'igcse' ? ['A','B','C','D','E','F','G'] : ['A','B','C','D','E']);
+    const row = lines.find(line => new RegExp(`^Component\\s+${component}(?:\\s|$)`, 'i').test(line));
+    if (!row) return null;
+    const values = row.replace(new RegExp(`^Component\\s+${component}\\s*`, 'i'), '').split(/\s+/);
+    const max = Number(values.shift());
+    if (!Number.isFinite(max)) return null;
+    const gradeValues = {};
+    grades.forEach((grade, index) => {
+      const token = values[index];
+      gradeValues[grade] = /^\d+$/.test(token || '') ? Number(token) : null;
+    });
+    return { sess:`${SESS[pair.session]} ${pair.year}`, v:component, max, grades:gradeValues };
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
+async function loadPairThreshold(pair) {
+  if (pair.thresholdVerified) return pair.threshold;
+  if (!pair.gtUrl || !pair.component) return null;
+  if (!thresholdPDFCache.has(pair.gtUrl)) thresholdPDFCache.set(pair.gtUrl, fetchPDF(pair.gtUrl));
+  const bytes = await thresholdPDFCache.get(pair.gtUrl);
+  pair.threshold = await extractComponentThreshold(bytes, pair);
+  pair.thresholdVerified = true;
+  return pair.threshold;
+}
+
+function thresholdGrades(row) {
+  return TeraCore.thresholdGrades(row);
+}
+
+function normalizeThresholdRow(row) {
+  return TeraCore.normalizeThresholdRow(row);
+}
+
+function collectThresholdSubjects(pairs) {
+  const groups = new Map();
+  pairs.forEach(pair => {
+    const code = pair.subjectCode || (pair.key.match(/(\d{4})/) || [])[1];
+    if (!code) return;
+    const groupKey = `${pair.board || 'unknown'}|${pair.qualification || 'unknown'}|${code}`;
+    const qualificationName = CATALOG[pair.board]?.qualifications?.[pair.qualification]?.name;
+    if (!groups.has(groupKey)) groups.set(groupKey, {
+      name:`${pair.subjectName || SUBJECTS[code] || 'Subject'} ${code}${qualificationName ? ` · ${qualificationName}` : ''}`,
+      boardName:CATALOG[pair.board]?.name || '', qualificationName:qualificationName || '', data:[]
+    });
+    if (pair.threshold) {
+      const group = groups.get(groupKey);
+      const id = `${pair.threshold.sess}|${pair.threshold.v}`;
+      if (!group.data.some(row => `${row.sess}|${row.v}` === id)) group.data.push(normalizeThresholdRow(pair.threshold));
+    }
+  });
+  groups.forEach(group => {
+    group.data.sort((a,b) => b.sess.localeCompare(a.sess) || String(a.v).localeCompare(String(b.v)));
+  });
+  return [...groups.values()].filter(group => group.data.length);
+}
+
+function addCatalogSelection() {
+  if (busy || megaBusy) return;
+  const boardKey = document.getElementById('catBoard').value;
+  const board = CATALOG[boardKey];
+  if (board.adapter !== 'caie') return;
+  const qualificationKey = document.getElementById('catQual').value;
+  const qualification = board.qualifications[qualificationKey];
+  const subjectCode = document.getElementById('catSubject').value;
+  const subject = qualification.subjects.find(s => s.code === subjectCode);
+  const from = Number(document.getElementById('catFrom').value);
+  const to = Number(document.getElementById('catTo').value);
+  const years = [];
+  if (Number.isInteger(from) && Number.isInteger(to) && from >= 2000 && to <= 2026) {
+    for (let year = Math.min(from,to); year <= Math.max(from,to); year++) years.push(year);
+  }
+  const papers = parseNumberSelection(document.getElementById('catPapers').value, 1, 9);
+  const variants = parseNumberSelection(document.getElementById('catVariants').value, 0, 9);
+  const sessions = [
+    ['m','catFM'], ['s','catMJ'], ['w','catON']
+  ].filter(([,id]) => document.getElementById(id).checked).map(([key]) => key);
+  if (!years.length || !papers.length || !variants.length || !sessions.length) {
+    log('Catalog selection needs valid years, paper(s), variant(s), and at least one session.', 'warn');
+    return;
+  }
+
+  const map = new Map(detectedPairs.map(pair => [pair.key, pair]));
+  let added = 0;
+  years.forEach(year => sessions.forEach(session => papers.forEach(paper => variants.forEach(variant => {
+    const component = `${paper}${variant}`;
+    const yy = String(year).slice(-2);
+    const key = `${subjectCode}_${session}${yy}_${component}`;
+    const pair = {
+      key,
+      label: `${subject.name} ${subjectCode} · ${SESS[session]}${yy} · P${component}`,
+      qpUrl: caiePaperUrl(subjectCode, session, year, 'qp', component),
+      msUrl: caiePaperUrl(subjectCode, session, year, 'ms', component),
+      gtUrl: caieThresholdUrl(subjectCode, session, year),
+      qpBytes:null, msBytes:null, source:'catalog', board:boardKey,
+      qualification:qualificationKey, subjectCode, subjectName:subject.name, session, year, component,
+      grades: qualificationKey === 'igcse' && /\(9-1\)/.test(subject.name)
+        ? ['9','8','7','6','5','4','3','2','1']
+        : qualificationKey === 'igcse' ? ['A','B','C','D','E','F','G'] : ['A','B','C','D','E']
+    };
+    if (THRESHOLDS[subjectCode]) {
+      const prefix = `${SESS[session]} ${year}`;
+      const row = THRESHOLDS[subjectCode].data.find(item => item.sess === prefix && item.v === component);
+      if (row) pair.threshold = { ...row };
+    }
+    if (!map.has(key)) {
+      map.set(key, pair);
+      added++;
+    } else if (map.get(key).source === 'catalog') {
+      map.set(key, pair);
+    }
+  }))));
+  detectedPairs = [...map.values()];
+  resetCompilationState();
+  renderPairs(detectedPairs);
+  document.getElementById('pairCount').textContent = `${detectedPairs.length} pair(s)`;
+  document.getElementById('catalogCount').textContent = `${detectedPairs.filter(p => p.source === 'catalog').length} catalog`;
+  document.getElementById('btnCompile').disabled = !detectedPairs.some(p => (p.qpBytes||p.qpUrl) && (p.msBytes||p.msUrl));
+  log(`Catalog added ${added} paper pair(s): ${subject.name} ${subjectCode}`, added ? 'bold' : 'dim');
+  setStatus(`${detectedPairs.length} pair(s) ready`);
+}
+
+function clearCatalogPairs() {
+  if (busy || megaBusy) return;
+  const keys = detectedPairs.filter(p => p.source === 'catalog').map(p => p.key);
+  keys.forEach(key => { delete compiledBlobs[key]; delete compiledStats[key]; });
+  detectedPairs = detectedPairs.filter(p => p.source !== 'catalog');
+  renderPairs(detectedPairs);
+  document.getElementById('catalogCount').textContent = '';
+  document.getElementById('pairCount').textContent = detectedPairs.length ? `${detectedPairs.length} pair(s)` : '';
+  document.getElementById('btnCompile').disabled = !detectedPairs.some(p => (p.qpBytes||p.qpUrl) && (p.msBytes||p.msUrl));
+  document.getElementById('btnMega').disabled = Object.keys(compiledBlobs).length < 2;
+  setStatus(detectedPairs.length ? `${detectedPairs.length} pair(s) ready` : 'Ready');
+}
+
+function parseURL(url) {
+  return TeraCore.parsePaperReference(url, SUBJECTS, SESS);
+}
+
+function buildPairs(lines) {
+  const map = {};
+  lines.forEach(l => {
+    const p = parseURL(l);
+    if (!p) return;
+    if (!map[p.key]) map[p.key] = {key:p.key,label:p.label,qpUrl:null,msUrl:null,qpBytes:null,msBytes:null,source:'links'};
+    if (p.type==='qp') map[p.key].qpUrl = p.url;
+    if (p.type==='ms') map[p.key].msUrl = p.url;
+    map[p.key].label = p.label;
+  });
+  return Object.values(map);
+}
+
+// ═══════════════════════════════════════════
+//  CONSERVATIVE BLANK PAGE DETECTION
+//  A page is removed only when it is explicitly labelled blank, or when it has
+//  no extracted text and almost no visible ink. Sparse content is preserved.
+// ═══════════════════════════════════════════
+async function getNonBlankIndices(pdfBytes) {
+  const copy   = pdfBytes.slice(0);
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const pdfDoc = await loadingTask.promise;
+  const total  = pdfDoc.numPages;
+  const keep   = [];
+
+  try {
+    for (let i = 1; i <= total; i++) {
+      const page = await pdfDoc.getPage(i);
+      let text = '';
+
+      try {
+        const tc   = await page.getTextContent();
+        text = tc.items.map(it => it.str).join(' ');
+        if (isExplicitBlankPage(text)) continue;
+      } catch(_) {}
+
+      // Any real text is enough evidence that this page contains content.
+      if (text.replace(/\s/g, '').length > 0) {
+        keep.push(i - 1);
+        continue;
+      }
+
+      // Image-only pages are treated as blank only when less than 0.1% of their
+      // pixels contain visible ink. This deliberately keeps sparse diagrams.
+      const viewport = page.getViewport({ scale: 0.5 });
+      const canvas   = document.createElement('canvas');
+      canvas.width   = Math.ceil(viewport.width);
+      canvas.height  = Math.ceil(viewport.height);
+      const ctx      = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let ink = 0;
+      for (let j = 0; j < data.length; j += 4) {
+        if (data[j] < 245 || data[j+1] < 245 || data[j+2] < 245) ink++;
+      }
+      if ((ink / (data.length/4)) >= 0.001) keep.push(i - 1);
+      canvas.width = canvas.height = 1;
+    }
+  } finally {
+    await loadingTask.destroy();
+  }
+  return keep;
+}
+
+// ═══════════════════════════════════════════
+//  GRADE THRESHOLD DATA (official Cambridge)
+// ═══════════════════════════════════════════
+const THRESHOLDS = {
+  '9700': {
+    name: 'Biology 9700',
+    data: [
+      {sess:'MJ 2024',v:'21',max:60,A:38,B:35,C:29,D:24,E:18},
+      {sess:'MJ 2024',v:'22',max:60,A:32,B:27,C:21,D:16,E:10},
+      {sess:'ON 2024',v:'21',max:60,A:40,B:33,C:27,D:23,E:17},
+      {sess:'ON 2024',v:'22',max:60,A:40,B:33,C:27,D:22,E:16},
+      {sess:'MJ 2023',v:'21',max:60,A:39,B:34,C:28,D:20,E:14},
+      {sess:'MJ 2023',v:'22',max:60,A:38,B:33,C:27,D:21,E:16},
+      {sess:'ON 2023',v:'21',max:60,A:38,B:32,C:27,D:21,E:15},
+      {sess:'ON 2023',v:'22',max:60,A:38,B:32,C:28,D:22,E:16},
+      {sess:'MJ 2022',v:'21',max:60,A:39,B:34,C:29,D:22,E:16},
+      {sess:'MJ 2022',v:'22',max:60,A:32,B:27,C:23,D:18,E:14},
+      {sess:'ON 2022',v:'21',max:60,A:35,B:31,C:25,D:20,E:15},
+      {sess:'ON 2022',v:'22',max:60,A:34,B:25,C:20,D:16,E:11},
+    ]
+  },
+  '9702': {
+    name: 'Physics 9702',
+    data: [
+      {sess:'MJ 2024',v:'21',max:60,A:41,B:37,C:31,D:25,E:18},
+      {sess:'MJ 2024',v:'22',max:60,A:46,B:39,C:31,D:24,E:16},
+      {sess:'MJ 2024',v:'23',max:60,A:43,B:37,C:31,D:24,E:16},
+      {sess:'ON 2024',v:'21',max:60,A:44,B:37,C:32,D:26,E:20},
+      {sess:'ON 2024',v:'22',max:60,A:44,B:37,C:30,D:25,E:18},
+      {sess:'ON 2024',v:'23',max:60,A:47,B:39,C:33,D:26,E:19},
+      {sess:'MJ 2023',v:'21',max:60,A:41,B:35,C:29,D:22,E:15},
+      {sess:'MJ 2023',v:'22',max:60,A:44,B:38,C:31,D:24,E:16},
+      {sess:'MJ 2023',v:'23',max:60,A:41,B:35,C:28,D:21,E:15},
+      {sess:'ON 2023',v:'21',max:60,A:40,B:34,C:28,D:22,E:16},
+      {sess:'ON 2023',v:'22',max:60,A:38,B:32,C:26,D:20,E:14},
+      {sess:'ON 2023',v:'23',max:60,A:42,B:36,C:30,D:23,E:16},
+      {sess:'MJ 2022',v:'21',max:60,A:38,B:33,C:27,D:21,E:14},
+      {sess:'MJ 2022',v:'22',max:60,A:40,B:33,C:27,D:20,E:13},
+      {sess:'ON 2022',v:'21',max:60,A:39,B:33,C:27,D:21,E:14},
+      {sess:'ON 2022',v:'22',max:60,A:41,B:35,C:29,D:22,E:15},
+    ]
+  },
+  '9701': {
+    name: 'Chemistry 9701',
+    data: [
+      {sess:'MJ 2024',v:'21',max:60,A:35,B:29,C:23,D:17,E:11},
+      {sess:'MJ 2024',v:'22',max:60,A:37,B:30,C:24,D:18,E:12},
+      {sess:'ON 2024',v:'21',max:60,A:33,B:27,C:21,D:16,E:10},
+      {sess:'ON 2024',v:'22',max:60,A:36,B:29,C:23,D:17,E:11},
+      {sess:'MJ 2023',v:'21',max:60,A:35,B:26,C:22,D:17,E:12},
+      {sess:'MJ 2023',v:'22',max:60,A:36,B:24,C:19,D:14,E:9},
+      {sess:'MJ 2023',v:'23',max:60,A:35,B:26,C:22,D:17,E:12},
+      {sess:'ON 2023',v:'21',max:60,A:34,B:27,C:21,D:15,E:9},
+      {sess:'ON 2023',v:'22',max:60,A:33,B:26,C:20,D:14,E:8},
+      {sess:'MJ 2022',v:'21',max:60,A:34,B:28,C:23,D:18,E:13},
+      {sess:'MJ 2022',v:'22',max:60,A:32,B:26,C:21,D:15,E:9},
+      {sess:'ON 2022',v:'21',max:60,A:31,B:25,C:19,D:13,E:8},
+      {sess:'ON 2022',v:'22',max:60,A:35,B:28,C:22,D:16,E:10},
+    ]
+  },
+  '9990': {
+    name: 'Psychology 9990',
+    data: [
+      {sess:'MJ 2024',v:'21',max:50,A:38,B:33,C:28,D:23,E:18},
+      {sess:'MJ 2024',v:'22',max:50,A:39,B:34,C:29,D:24,E:19},
+      {sess:'ON 2024',v:'21',max:50,A:37,B:32,C:27,D:22,E:17},
+      {sess:'ON 2024',v:'22',max:50,A:38,B:33,C:28,D:23,E:18},
+      {sess:'MJ 2023',v:'21',max:50,A:36,B:31,C:26,D:21,E:16},
+      {sess:'MJ 2023',v:'22',max:50,A:38,B:33,C:28,D:23,E:18},
+      {sess:'ON 2023',v:'21',max:50,A:35,B:30,C:25,D:20,E:15},
+      {sess:'ON 2023',v:'22',max:50,A:37,B:32,C:27,D:22,E:17},
+      {sess:'MJ 2022',v:'21',max:50,A:36,B:31,C:26,D:21,E:16},
+      {sess:'MJ 2022',v:'22',max:50,A:37,B:32,C:27,D:22,E:17},
+      {sess:'ON 2022',v:'21',max:50,A:34,B:29,C:24,D:19,E:14},
+      {sess:'ON 2022',v:'22',max:50,A:36,B:31,C:26,D:21,E:16},
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════
+//  GRADE THRESHOLD PAGE — simple, plain text table
+// ═══════════════════════════════════════════
+async function makeThresholdPage(pdfDoc, subjectCode) {
+  const subj = THRESHOLDS[subjectCode];
+  if (!subj) return;
+
+  const { rgb, StandardFonts } = PDFLib;
+  const page   = pdfDoc.addPage([595, 842]);
+  const font   = await pdfDoc.embedFont(StandardFonts.Courier);
+  const bold   = await pdfDoc.embedFont(StandardFonts.CourierBold);
+  const grey   = rgb(0.55, 0.55, 0.55);
+  const black  = rgb(0.08, 0.08, 0.08);
+  const liteGr = rgb(0.85, 0.85, 0.85);
+
+  let y = 800;
+  const lx = 44;
+  const lh = 13;
+
+  // Title
+  page.drawText('GRADE THRESHOLDS — PAPER 2', { x: lx, y, size: 12, font: bold, color: black });
+  y -= lh * 1.2;
+  page.drawText('Cambridge International AS & A Level  |  Minimum raw marks required per grade  |  Max 60 marks', {
+    x: lx, y, size: 7.5, font, color: grey
+  });
+  y -= lh * 0.6;
+  page.drawLine({ start:{x:lx,y}, end:{x:551,y}, thickness:0.6, color: rgb(0.3,0.3,0.3) });
+  y -= lh * 1.2;
+
+  const COL = { sess:0, v:92, max:132, A:170, B:208, C:246, D:284, E:322 };
+  const colKeys = ['sess','v','max','A','B','C','D','E'];
+  const colHdrs = ['Session','Var','Max','A','B','C','D','E'];
+
+  // Header row
+  colHdrs.forEach((h,i) => {
+    page.drawText(h, { x: lx + Object.values(COL)[i], y, size: 8, font: bold, color: black });
+  });
+  y -= lh * 0.4;
+  page.drawLine({ start:{x:lx,y}, end:{x:lx+340,y}, thickness:0.3, color: liteGr });
+  y -= lh * 0.9;
+
+  for (const row of subj.data) {
+    const vals = [row.sess, row.v, String(row.max), String(row.A), String(row.B), String(row.C), String(row.D), String(row.E)];
+    vals.forEach((v, i) => {
+      const col = i >= 3 ? rgb(0.1, 0.1, 0.1) : grey;
+      page.drawText(v, { x: lx + Object.values(COL)[i], y, size: 8, font: i>=3?bold:font, color: col });
+    });
+    y -= lh;
+
+    // Light separator between sessions
+    if (subj.data.indexOf(row) < subj.data.length-1 && subj.data[subj.data.indexOf(row)+1].sess !== row.sess) {
+      page.drawLine({ start:{x:lx,y:y+2}, end:{x:lx+340,y:y+2}, thickness:0.25, color: liteGr });
+    }
+  }
+
+  // Footer
+  page.drawLine({ start:{x:lx,y:36}, end:{x:551,y:36}, thickness:0.4, color: liteGr });
+  page.drawText('Source: Cambridge International Grade Threshold Tables  |  Generated by TERA · ZER0CTRL', {
+    x: lx, y: 24, size: 7, font, color: grey
+  });
+}
+
+// ═══════════════════════════════════════════
+//  MARK-SCHEME CONTENT DETECTION
+//  MS PDFs begin with a cover and generic examiner guidance.  Those pages are
+//  not answers to questions, so retain only pages with the actual
+//  Question / Answer / Marks table.  A page has to positively identify itself
+//  as a marking-table page; pages we cannot classify are left out rather than
+//  accidentally including boilerplate in a student booklet.
+// ═══════════════════════════════════════════
+function isMarkSchemeContentPage(text) {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  return /\bQuestion\s+Answer\s+Marks?\b/i.test(clean);
+}
+
+function isExplicitBlankPage(text) {
+  return /\bBLANK\s+PAGE\b/i.test(text);
+}
+
+function isMarkSchemeBoilerplate(text) {
+  return /\b(?:Generic Marking Principles|Science-Specific Marking Principles|Mark scheme abbreviations|This mark scheme is published)\b/i.test(text);
+}
+
+async function getMarkSchemeContentIndices(msBytes) {
+  const copy   = msBytes.slice(0);
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const pdfDoc = await loadingTask.promise;
+  try {
+    const texts = [];
+    for (let i = 0; i < pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i + 1);
+      texts.push((await page.getTextContent()).items.map(item => item.str).join(' '));
+    }
+
+    // The first table is the boundary between examiner guidance and answers.
+    // Keep every following non-blank page: some valid continuation pages do
+    // not repeat the Question / Answer / Marks header, so filtering each page
+    // independently risks silently losing a real answer page.
+    const firstContent = texts.findIndex(isMarkSchemeContentPage);
+    if (firstContent < 0) return [];
+
+    const nonBlank = new Set(await getNonBlankIndices(msBytes));
+    const keep = [];
+    for (let i = firstContent; i < texts.length; i++) {
+      if (!nonBlank.has(i) || isMarkSchemeBoilerplate(texts[i])) continue;
+      keep.push(i);
+    }
+    log(`  MS marking pages: ${keep.map(index => index + 1).join(', ') || 'none'}`, 'dim');
+    return keep;
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  COMPACT MS LAYOUT — adaptive two-up A4.
+//  Landscape marking pages are stacked top-to-bottom on portrait A4. Portrait
+//  marking pages are placed left-to-right on landscape A4. The full rendered
+//  source page is preserved and the layout with the larger minimum scale wins,
+//  preventing rotated and non-rotated schemes from producing different text sizes.
+// ═══════════════════════════════════════════
+async function renderPageToJpeg(pdfJsDoc, pageNum, renderW) {
+  // pageNum is 1-indexed (pdf.js convention).
+  // pdf.js getViewport applies /Rotate — canvas is always visually correct.
+  const page     = await pdfJsDoc.getPage(pageNum);
+  const nativeVP = page.getViewport({ scale: 1 });
+  const scale    = renderW / nativeVP.width;
+  const viewport = page.getViewport({ scale });
+  const canvas   = document.createElement('canvas');
+  canvas.width   = Math.ceil(viewport.width);
+  canvas.height  = Math.ceil(viewport.height);
+  const ctx      = canvas.getContext('2d');
+  ctx.fillStyle  = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  if (!blob) throw new Error('Could not render mark-scheme page');
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+async function compactMS(msBytes, keepIndices) {
+  const copy     = msBytes.slice(0);
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const pdfJsDoc = await loadingTask.promise;
+  const outDoc   = await PDFLib.PDFDocument.create();
+  const layoutCounts = { portrait:0, landscape:0 };
+
+  const margin = 8;
+  const gap = 5;
+  const drawFitted = (sheet, image, x, y, width, height) => {
+    const scale = Math.min(width / image.width, height / image.height);
+    const drawW = image.width * scale;
+    const drawH = image.height * scale;
+    sheet.drawImage(image, {
+      x: x + (width - drawW) / 2,
+      y: y + (height - drawH) / 2,
+      width: drawW,
+      height: drawH,
+    });
+  };
+
+  try {
+    for (let i = 0; i < keepIndices.length; i += 2) {
+      const firstIndex = keepIndices[i];
+      const secondIndex = keepIndices[i + 1];
+      const firstImage = await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, firstIndex + 1, 1750));
+      const secondImage = secondIndex === undefined
+        ? null
+        : await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, secondIndex + 1, 1750));
+      const layout = TeraCore.chooseTwoUpLayout([firstImage, secondImage], { margin, gap });
+      layoutCounts[layout.orientation]++;
+      const sheet = outDoc.addPage([layout.pageW, layout.pageH]);
+      const firstSlot = layout.slots[0];
+      drawFitted(sheet, firstImage, firstSlot.x, firstSlot.y, firstSlot.width, firstSlot.height);
+
+      if (secondImage) {
+        const secondSlot = layout.slots[1];
+        drawFitted(sheet, secondImage, secondSlot.x, secondSlot.y, secondSlot.width, secondSlot.height);
+        sheet.drawLine({
+          start: { x:layout.divider.x1, y:layout.divider.y1 },
+          end: { x:layout.divider.x2, y:layout.divider.y2 },
+          thickness: 0.35,
+          color: PDFLib.rgb(0.78, 0.78, 0.78),
+        });
+      }
+    }
+    const layoutSummary = Object.entries(layoutCounts)
+      .filter(([, count]) => count)
+      .map(([orientation, count]) => `${count} ${orientation}`)
+      .join(', ');
+    log(`  MS two-up sheets: ${layoutSummary}`, 'dim');
+    return outDoc;
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  COVER PAGE — subject name + code, centered, bold
+// ═══════════════════════════════════════════
+async function makeCoverPage(pdfDoc, label, context = {}) {
+  const { rgb, StandardFonts } = PDFLib;
+  const page = pdfDoc.addPage([595, 842]);
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const reg  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  // Parse label: "Biology 9700 · MJ24 · P21"
+  // Extract subject name, code, session, paper
+  const parts   = label.split('·').map(s => s.trim());
+  const subjPart = parts[0] || label;   // e.g. "Biology 9700"
+  const sessPart = parts[1] || '';       // e.g. "MJ24"
+  const papPart  = parts[2] || '';       // e.g. "P21"
+
+  // Split subject name and code (last token is numeric code)
+  const tokens   = subjPart.trim().split(' ');
+  const code     = tokens[tokens.length - 1];          // "9700"
+  const subjName = tokens.slice(0, -1).join(' ');      // "Biology"
+
+  const cx = 595 / 2;
+  const cy = 842 / 2;
+
+  // Thin border box
+  const pad = 60;
+  page.drawRectangle({
+    x: pad, y: pad,
+    width:  595 - 2*pad,
+    height: 842 - 2*pad,
+    borderColor: rgb(0.75, 0.75, 0.75),
+    borderWidth: 0.5,
+    color: rgb(1, 1, 1),
+  });
+
+  // Subject name — large, centered, horizontal
+  const nameSize = 36;
+  const nameW    = bold.widthOfTextAtSize(subjName.toUpperCase(), nameSize);
+  page.drawText(subjName.toUpperCase(), {
+    x: cx - nameW / 2,
+    y: cy + 30,
+    size: nameSize,
+    font: bold,
+    color: rgb(0.08, 0.08, 0.08),
+  });
+
+  // Syllabus code — below, slightly smaller
+  const codeSize = 28;
+  const codeW    = bold.widthOfTextAtSize(code, codeSize);
+  page.drawText(code, {
+    x: cx - codeW / 2,
+    y: cy - 20,
+    size: codeSize,
+    font: bold,
+    color: rgb(0.08, 0.08, 0.08),
+  });
+
+  // Thin rule between name and code
+  page.drawLine({
+    start: { x: cx - 60, y: cy + 14 },
+    end:   { x: cx + 60, y: cy + 14 },
+    thickness: 0.5,
+    color: rgb(0.6, 0.6, 0.6),
+  });
+
+  // Session + Paper below code, small grey
+  if (sessPart || papPart) {
+    const subLine  = [sessPart, papPart].filter(Boolean).join('  ·  ');
+    const subSize  = 11;
+    const subW     = reg.widthOfTextAtSize(subLine, subSize);
+    page.drawText(subLine, {
+      x: cx - subW / 2,
+      y: cy - 58,
+      size: subSize,
+      font: reg,
+      color: rgb(0.55, 0.55, 0.55),
+    });
+  }
+
+  // Footer — derived from the selected catalog board and qualification.
+  const boardName = CATALOG[context.board]?.name || 'Past Paper';
+  const qualificationName = CATALOG[context.board]?.qualifications?.[context.qualification]?.name || '';
+  const footText = [boardName, qualificationName, 'Past Paper Booklet'].filter(Boolean).join('  ·  ');
+  const footSize = 8;
+  const footW    = reg.widthOfTextAtSize(footText, footSize);
+  page.drawText(footText, {
+    x: cx - footW / 2,
+    y: pad + 22,
+    size: footSize,
+    font: reg,
+    color: rgb(0.65, 0.65, 0.65),
+  });
+}
+
+// ═══════════════════════════════════════════
+//  COMPILE ONE PAIR
+// ═══════════════════════════════════════════
+async function compilePair(pair, onProgress) {
+  let qpBytes, msBytes;
+
+  if (pair.qpBytes && pair.msBytes) {
+    onProgress(10, 'Using local files…');
+    qpBytes = pair.qpBytes;
+    msBytes = pair.msBytes;
+  } else {
+    onProgress(5, 'Fetching QP…');
+    qpBytes = await fetchPDF(pair.qpUrl);
+    await sleep(1200);
+    onProgress(25, 'Fetching MS…');
+    msBytes = await fetchPDF(pair.msUrl);
+    await sleep(700);
+  }
+
+  const qpDoc = await PDFLib.PDFDocument.load(qpBytes);
+  const msSourceDoc = await PDFLib.PDFDocument.load(msBytes);
+  const sourcePages = qpDoc.getPageCount() + msSourceDoc.getPageCount();
+
+  // Preserve every source page except pages that are genuinely blank.
+  onProgress(45, 'Scanning QP pages…');
+  const qpKeep = await getNonBlankIndices(qpBytes);
+  if (!qpKeep.length) throw new Error('No non-blank question-paper pages found');
+
+  // Omit the MS cover and generic marking principles. Keep actual question,
+  // answer, marks-table pages only.
+  onProgress(60, 'Finding marking pages…');
+  const msKeep = await getMarkSchemeContentIndices(msBytes);
+  if (!msKeep.length) throw new Error('No actual mark-scheme pages found');
+
+  onProgress(76, 'Building booklet…');
+  const book  = await PDFLib.PDFDocument.create();
+
+  // Cover page — first page of every booklet
+  await makeCoverPage(book, pair.label, pair);
+
+  if (qpKeep.length) {
+    const qpPages = await book.copyPages(qpDoc, qpKeep);
+    qpPages.forEach(p => book.addPage(p));
+  }
+
+  // MS: render actual marking pages directly from original bytes, compacted
+  // two-up on A4 with the orientation that preserves the strongest text scale.
+  let msSheetCount = 0;
+  if (msKeep.length) {
+    onProgress(82, 'Compacting marking pages…');
+    const msCompact = await compactMS(msBytes, msKeep);
+    const twoPgs  = await book.copyPages(msCompact, msCompact.getPageIndices());
+    twoPgs.forEach(p => book.addPage(p));
+    msSheetCount = msCompact.getPageCount();
+  }
+
+  book.setTitle(pair.label);
+  book.setCreator('TERA · ZER0CTRL');
+
+  if (pair.gtUrl) {
+    onProgress(94, 'Loading grade threshold…');
+    try {
+      await loadPairThreshold(pair);
+    } catch (error) {
+      log(`  Threshold unavailable for ${pair.label}: ${error.message}`, 'warn');
+    }
+  }
+
+  onProgress(98, 'Saving…');
+  const saved = await book.save();
+  const impact = TeraCore.calculatePageImpact(sourcePages, book.getPageCount());
+  onProgress(100, 'Done — ' + qpKeep.length + ' QP + ' + msSheetCount + ' MS sheets');
+
+  // Return subject code so mega PDF can build combined threshold page
+  const subjectMatch = (pair.qpUrl || pair.key || '').match(/(\d{4})/);
+  const subjectCode  = pair.subjectCode || (subjectMatch ? subjectMatch[1] : null);
+
+  return { bytes: saved, qpPages: qpKeep.length, msPages: msKeep.length, msSheets: msSheetCount, subjectCode, ...impact };
+}
+
+// ═══════════════════════════════════════════
+//  PARSE LINKS (URL mode)
+// ═══════════════════════════════════════════
+function parseLinks() {
+  if (busy || megaBusy) { log('Wait for the current job to finish before parsing new links.', 'warn'); return; }
+  const raw   = document.getElementById('linkInput').value;
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const linkPairs = buildPairs(lines);
+  const map = new Map(detectedPairs.filter(pair => pair.source !== 'links').map(pair => [pair.key, pair]));
+  linkPairs.forEach(pair => map.set(pair.key, pair));
+  detectedPairs = [...map.values()];
+  resetCompilationState();
+
+  renderPairs(detectedPairs);
+  const unrec = lines.filter(l => !parseURL(l)).length;
+  document.getElementById('linkCount').textContent = `${lines.length} links`;
+  document.getElementById('pairCount').textContent = `${detectedPairs.length} pair(s)`;
+  document.getElementById('btnCompile').disabled   = detectedPairs.length === 0;
+  document.getElementById('btnMega').disabled      = true;
+
+  log(`Parsed ${lines.length} links → ${linkPairs.length} link pair(s)`, 'bold');
+  if (unrec) log(`${unrec} link(s) not recognised (check URL format)`, 'warn');
+  const miss = linkPairs.filter(p => !p.qpUrl || !p.msUrl);
+  miss.forEach(p => log(`  · ${p.label} — ${!p.qpUrl?'QP':'MS'} missing`, 'warn'));
+  setStatus(`${detectedPairs.length} pair(s) ready`);
+}
+
+// ═══════════════════════════════════════════
+//  LOCAL FILES
+// ═══════════════════════════════════════════
+let localFiles = [];
+
+function handleFiles(fileList) {
+  Array.from(fileList).forEach(f => {
+    if (!localFiles.find(x => x.name === f.name)) localFiles.push(f);
+  });
+  renderFileList();
+  document.getElementById('btnPairLocal').disabled = localFiles.length === 0;
+  document.getElementById('localCount').textContent = `${localFiles.length} file(s)`;
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('over');
+  handleFiles(e.dataTransfer.files);
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  el.replaceChildren();
+  localFiles.forEach(f => {
+    const p = parseURL(f.name);
+    const color = p ? 'b-ok' : 'b-miss';
+    const tag   = p ? p.type.toUpperCase() : '?';
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    const badge = document.createElement('span');
+    badge.className = 'file-badge ' + color;
+    badge.textContent = tag;
+    const name = document.createElement('span');
+    name.style.color = '#444';
+    name.textContent = f.name;
+    const size = document.createElement('span');
+    size.style.cssText = 'color:#aaa;margin-left:auto';
+    size.textContent = (f.size / 1024).toFixed(0) + ' KB';
+    row.append(badge, name, size);
+    el.appendChild(row);
+  });
+}
+
+function readFileBytes(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read ' + file.name));
+    reader.onload = () => resolve(new Uint8Array(reader.result));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function pairLocalFiles() {
+  if (busy || megaBusy) { log('Wait for the current job to finish before pairing files.', 'warn'); return; }
+  const map = {};
+  const recognised = [];
+  localFiles.forEach(f => {
+    const p = parseURL(f.name);
+    if (!p) { log(`Could not parse filename: ${f.name}`, 'warn'); return; }
+    recognised.push({ file:f, parsed:p });
+  });
+
+  if (!recognised.length) return;
+  document.getElementById('btnPairLocal').disabled = true;
+  try {
+    const loaded = await Promise.all(recognised.map(async item => ({
+      ...item,
+      bytes: await readFileBytes(item.file),
+    })));
+    loaded.forEach(({ parsed:p, bytes }) => {
+      if (!map[p.key]) {
+        map[p.key] = {key:p.key,label:p.label,qpUrl:null,msUrl:null,qpBytes:null,msBytes:null,source:'local'};
+      }
+      if (p.type === 'qp') map[p.key].qpBytes = bytes;
+      if (p.type === 'ms') map[p.key].msBytes = bytes;
+    });
+    const allPairs = new Map(detectedPairs.filter(pair => pair.source !== 'local').map(pair => [pair.key, pair]));
+    Object.values(map).forEach(pair => allPairs.set(pair.key, pair));
+    detectedPairs = [...allPairs.values()];
+    resetCompilationState();
+    renderPairs(detectedPairs);
+    document.getElementById('pairCount').textContent = `${detectedPairs.length} pair(s)`;
+    document.getElementById('btnCompile').disabled = !detectedPairs.some(p => p.qpBytes && p.msBytes);
+    log(`${Object.keys(map).length} pair(s) detected from local files`, 'bold');
+    setStatus(`${detectedPairs.length} pair(s) ready (local)`);
+  } catch (error) {
+    log(error.message, 'err');
+    setStatus('Could not read local files');
+  } finally {
+    document.getElementById('btnPairLocal').disabled = localFiles.length === 0;
+  }
+}
+
+function clearLocalFiles() {
+  if (busy || megaBusy) { log('Wait for the current job to finish before clearing files.', 'warn'); return; }
+  localFiles = [];
+  document.getElementById('fileList').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('localCount').textContent = '';
+  document.getElementById('btnPairLocal').disabled = true;
+  const localKeys = new Set(detectedPairs.filter(p => p.source === 'local').map(p => p.key));
+  detectedPairs = detectedPairs.filter(p => p.source !== 'local');
+  localKeys.forEach(key => { delete compiledBlobs[key]; delete compiledStats[key]; });
+  renderPairs(detectedPairs);
+  document.getElementById('pairCount').textContent = detectedPairs.length ? `${detectedPairs.length} pair(s)` : '';
+  document.getElementById('btnCompile').disabled = !detectedPairs.some(p => (p.qpBytes || p.qpUrl) && (p.msBytes || p.msUrl));
+  document.getElementById('btnMega').disabled = Object.keys(compiledBlobs).length < 2;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER PAIRS
+// ═══════════════════════════════════════════
+function renderPairs(pairs) {
+  const list  = document.getElementById('pairsList');
+  const empty = document.getElementById('pairsEmpty');
+  list.querySelectorAll('.prow').forEach(r => r.remove());
+  empty.style.display = pairs.length ? 'none' : 'block';
+
+  pairs.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'prow';
+    row.id = `pr-${i}`;
+
+    // Determine if we have bytes (local) or URLs (remote)
+    const hasQP = p.qpBytes || p.qpUrl;
+    const hasMS = p.msBytes || p.msUrl;
+    const isLocal = p.qpBytes || p.msBytes;
+
+    const label = document.createElement('span');
+    label.className = 'plbl';
+    label.title = p.label;
+    label.textContent = p.label;
+    if (isLocal) {
+      const local = document.createElement('span');
+      local.style.cssText = 'color:#aaa;font-size:9px';
+      local.textContent = ' [local]';
+      label.appendChild(local);
+    }
+    const qp = document.createElement('span');
+    qp.className = `pbadge ${hasQP?'b-ok':'b-miss'}`;
+    qp.id = `qb-${i}`;
+    qp.textContent = 'QP';
+    const ms = document.createElement('span');
+    ms.className = `pbadge ${hasMS?'b-ok':'b-miss'}`;
+    ms.id = `mb-${i}`;
+    ms.textContent = 'MS';
+    const progress = document.createElement('div');
+    progress.className = 'pprog';
+    progress.id = `pg-${i}`;
+    progress.setAttribute('role', 'progressbar');
+    progress.setAttribute('aria-label', `${p.label} compilation progress`);
+    progress.setAttribute('aria-valuemin', '0');
+    progress.setAttribute('aria-valuemax', '100');
+    progress.setAttribute('aria-valuenow', '0');
+    const fill = document.createElement('div');
+    fill.className = 'pprog-fill';
+    fill.id = `pf-${i}`;
+    progress.appendChild(fill);
+    const save = document.createElement('button');
+    save.className = 'pdl';
+    save.id = `dl-${i}`;
+    save.textContent = '↓ Save';
+    save.addEventListener('click', () => downloadOne(i));
+    row.append(label, qp, ms, progress, save);
+    list.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  COMPILE ALL
+// ═══════════════════════════════════════════
+async function compileAll() {
+  if (busy || megaBusy) return;
+  busy = true;
+
+  const eligible = detectedPairs.filter(p => (p.qpBytes||p.qpUrl) && (p.msBytes||p.msUrl));
+  if (!eligible.length) { log('No complete pairs to compile', 'warn'); busy=false; return; }
+
+  document.getElementById('btnCompile').disabled = true;
+  document.getElementById('btnMega').disabled    = true;
+  document.getElementById('mainProg').classList.add('vis');
+  document.getElementById('mainProg').setAttribute('aria-valuenow', '0');
+
+  log(`━━━ Compiling ${eligible.length} pair(s) ━━━`, 'bold');
+  let done = 0;
+  let runSourcePages = 0;
+  let runOutputPages = 0;
+
+  for (let i = 0; i < eligible.length; i++) {
+    const p = eligible[i];
+    const pairIndex = detectedPairs.indexOf(p);
+    delete compiledBlobs[p.key];
+    delete compiledStats[p.key];
+
+    const row = document.getElementById(`pr-${pairIndex}`);
+    const pg  = document.getElementById(`pg-${pairIndex}`);
+    const pf  = document.getElementById(`pf-${pairIndex}`);
+    row.className = 'prow proc';
+    pg.style.display = 'block';
+    setStatus(`Compiling: ${p.label}`);
+    log(`Processing: ${p.label}`, 'info');
+
+    try {
+      const res = await compilePair(p, (pct, msg) => {
+        pf.style.width = pct + '%';
+        pg.setAttribute('aria-valuenow', String(pct));
+        setStatus(`${p.label} — ${msg}`);
+      });
+
+      compiledBlobs[p.key] = res.bytes;
+      compiledStats[p.key] = {
+        sourcePages:res.sourcePages,
+        outputPages:res.outputPages,
+        pagesSaved:res.pagesSaved,
+        savingsPct:res.savingsPct,
+      };
+      done++;
+      runSourcePages += res.sourcePages;
+      runOutputPages += res.outputPages;
+      row.className = 'prow done';
+      pf.classList.add('done');
+      document.getElementById(`dl-${pairIndex}`).classList.add('vis');
+      log(`✓ ${p.label} — ${res.qpPages} QP pages + ${res.msSheets} MS sheet(s)`, 'ok');
+      log(`  Print impact: ${res.sourcePages} source → ${res.outputPages} output; ${res.pagesSaved} page(s) avoided (${res.savingsPct}%)`, 'ok');
+
+    } catch (err) {
+      row.className = 'prow err';
+      pg.style.display = 'none';
+      log(`✗ ${p.label} — ${err.message}`, 'err');
+    }
+
+    const pct = Math.round(((i+1)/eligible.length)*100);
+    document.getElementById('mainProgFill').style.width = pct + '%';
+    document.getElementById('mainProg').setAttribute('aria-valuenow', String(pct));
+    if (i < eligible.length-1) await sleep(400);
+  }
+
+  log(`━━━ Complete: ${done}/${eligible.length} ━━━`, 'bold');
+  setStatus(`Done — ${done} booklet(s) ready`);
+  if (done && window.TERAUsage) {
+    window.TERAUsage.recordCompilation({
+      bookletCount:done,
+      sourcePages:runSourcePages,
+      outputPages:runOutputPages,
+    });
+  }
+  document.getElementById('btnMega').disabled = done < 2;
+  busy = false;
+  document.getElementById('btnCompile').disabled = !detectedPairs.some(p => (p.qpBytes||p.qpUrl) && (p.msBytes||p.msUrl));
+}
+
+// ═══════════════════════════════════════════
+//  DOWNLOADS
+// ═══════════════════════════════════════════
+function downloadOne(i) {
+  const p = detectedPairs[i];
+  const b = compiledBlobs[p.key];
+  if (!b) return;
+  const safe = p.label.replace(/[^a-zA-Z0-9_\-\.]/g,'_').slice(0,55);
+  triggerDownload(b, `TERA_${safe}.pdf`);
+  log(`Downloaded: ${p.label}`, 'ok');
+}
+
+// ═══════════════════════════════════════════
+//  COMBINED THRESHOLD PAGE — all subjects, one A4
+// ═══════════════════════════════════════════
+async function makeCombinedThresholdPage(pdfDoc, subjectCodes) {
+  const { rgb, StandardFonts } = PDFLib;
+  const font  = await pdfDoc.embedFont(StandardFonts.Courier);
+  const bold  = await pdfDoc.embedFont(StandardFonts.CourierBold);
+  const black = rgb(0.06, 0.06, 0.06);
+  const grey  = rgb(0.50, 0.50, 0.50);
+  const lite  = rgb(0.80, 0.80, 0.80);
+  const mid   = rgb(0.30, 0.30, 0.30);
+
+  // One A4 page — lay all subjects out to fill it
+  // Count total data rows to calibrate row height
+  let totalRows = 0;
+  subjectCodes.forEach(code => {
+    const s = THRESHOLDS[code];
+    if (s) totalRows += s.data.length + 3; // rows + header + spacer
+  });
+
+  const pageW  = 595;
+  const pageH  = 842;
+  const page   = pdfDoc.addPage([pageW, pageH]);
+  const lx     = 36;
+  const rx     = pageW - 36;
+  const usableH = pageH - 100; // 50 top margin + 50 bottom margin
+
+  // Dynamic row height to fill the page
+  const lh = Math.min(13, Math.max(9, usableH / (totalRows + 4)));
+  let y    = pageH - 46;
+
+  // Title
+  page.drawText('GRADE THRESHOLDS — PAPER 2', {
+    x: lx, y, size: 13, font: bold, color: black
+  });
+  page.drawText('Cambridge International AS & A Level', {
+    x: rx - bold.widthOfTextAtSize('Cambridge International AS & A Level', 8),
+    y: y + 1, size: 8, font, color: grey
+  });
+  y -= lh * 0.65;
+  page.drawText('Minimum raw marks required per grade  ·  Source: Cambridge International Examinations', {
+    x: lx, y, size: 7.5, font, color: grey
+  });
+  y -= lh * 0.45;
+  page.drawLine({ start:{x:lx,y}, end:{x:rx,y}, thickness:0.8, color: black });
+  y -= lh * 1.1;
+
+  // Column layout — wider to use full page width
+  const COL  = [0, 118, 158, 200, 242, 284, 326, 368];
+  const HDR  = ['Session', 'Var', 'Max', 'A', 'B', 'C', 'D', 'E'];
+  const WIDE = rx - lx; // usable width
+
+  for (const code of subjectCodes) {
+    const subj = THRESHOLDS[code];
+    if (!subj) continue;
+
+    // Subject heading with full-width rule
+    page.drawRectangle({ x: lx - 4, y: y - 2, width: WIDE + 8, height: lh + 4,
+      color: rgb(0.93, 0.93, 0.93), borderWidth: 0 });
+    page.drawText(subj.name.toUpperCase(), {
+      x: lx, y, size: 8, font: bold, color: black
+    });
+    // Max marks note right-aligned on same line, only for this subject
+    const maxMark = subj.data[0] ? subj.data[0].max : 60;
+    const maxNote = 'Max marks: ' + maxMark;
+    page.drawText(maxNote, {
+      x: rx - font.widthOfTextAtSize(maxNote, 7.5),
+      y, size: 7.5, font, color: grey
+    });
+    y -= lh * 1.0;
+
+    // Column headers
+    HDR.forEach((h, i) => {
+      page.drawText(h, { x: lx + COL[i], y, size: 7.5, font: bold, color: mid });
+    });
+    y -= lh * 0.3;
+    page.drawLine({ start:{x:lx,y}, end:{x:lx+390,y}, thickness:0.3, color: lite });
+    y -= lh * 0.8;
+
+    let lastSess = '';
+    for (const row of subj.data) {
+      if (lastSess && row.sess !== lastSess) {
+        page.drawLine({ start:{x:lx,y:y+lh*0.2}, end:{x:lx+390,y:y+lh*0.2}, thickness:0.2, color: lite });
+      }
+      lastSess = row.sess;
+      const vals = [row.sess, row.v, String(row.max),
+                    String(row.A), String(row.B), String(row.C), String(row.D), String(row.E)];
+      vals.forEach((v, i) => {
+        page.drawText(v, { x: lx + COL[i], y, size: 7.5,
+          font: i >= 3 ? bold : font,
+          color: i >= 3 ? black : grey
+        });
+      });
+      y -= lh;
+    }
+
+    y -= lh * 0.5;
+    page.drawLine({ start:{x:lx,y}, end:{x:rx,y}, thickness:0.3, color: lite });
+    y -= lh * 0.7;
+
+    if (y < 50) break;
+  }
+
+  // Footer
+  page.drawLine({ start:{x:lx,y:34}, end:{x:rx,y:34}, thickness:0.4, color: lite });
+  page.drawText('Source: Cambridge International Grade Threshold Tables  ·  Generated by TERA · ZER0CTRL', {
+    x: lx, y: 22, size: 6.5, font, color: lite
+  });
+}
+
+
+
+// ═══════════════════════════════════════════
+//  MEGA PDF — merge completed booklets without altering their contents.
+// ═══════════════════════════════════════════
+async function makeBalancedThresholdPages(pdfDoc, subjectCodes, suppliedSubjects = null) {
+  const { rgb, StandardFonts } = PDFLib;
+  const font  = await pdfDoc.embedFont(StandardFonts.Courier);
+  const bold  = await pdfDoc.embedFont(StandardFonts.CourierBold);
+  const black = rgb(0.06, 0.06, 0.06);
+  const grey  = rgb(0.50, 0.50, 0.50);
+  const lite  = rgb(0.80, 0.80, 0.80);
+  const mid   = rgb(0.30, 0.30, 0.30);
+  const subjects = suppliedSubjects || subjectCodes.map(code => {
+    const subject = THRESHOLDS[code];
+    return subject ? { ...subject, data:subject.data.map(normalizeThresholdRow) } : null;
+  }).filter(Boolean);
+  if (!subjects.length) return;
+
+  const pageW = 595, pageH = 842, lx = 36, rx = pageW - 36;
+  const units = subjects.reduce((sum, subj) => sum + subj.data.length + 4.4, 0);
+  const lh = Math.min(26, Math.max(13, Math.floor(680 / units)));
+  const fontSize = Math.min(11, Math.max(7.5, lh * 0.53));
+  const subjectHeight = subj => lh * (subj.data.length + 4.4);
+  const qualifications = [...new Set(subjects.map(subject => subject.qualificationName).filter(Boolean))];
+  const boards = [...new Set(subjects.map(subject => subject.boardName).filter(Boolean))];
+  const context = boards.length === 1 && qualifications.length === 1
+    ? `${boards[0]} · ${qualifications[0]}`
+    : boards.length === 1 ? `${boards[0]} · Mixed qualifications` : 'Selected qualifications';
+  let page, y, pageNo = 0;
+
+  const startPage = () => {
+    pageNo++;
+    page = pdfDoc.addPage([pageW, pageH]);
+    y = pageH - 46;
+    const title = pageNo === 1 ? 'GRADE THRESHOLDS - SELECTED COMPONENTS' : 'GRADE THRESHOLDS - SELECTED COMPONENTS (CONTINUED)';
+    page.drawText(title, { x: lx, y, size: 13, font: bold, color: black });
+    page.drawText(context, {
+      x: rx - bold.widthOfTextAtSize(context, 8), y: y + 1, size: 8, font, color: grey
+    });
+    y -= lh * 0.75;
+    page.drawText('Minimum raw marks required per grade  |  Source: Cambridge International Examinations', {
+      x: lx, y, size: Math.max(7, fontSize - 1.5), font, color: grey
+    });
+    y -= lh * 0.55;
+    page.drawLine({ start:{x:lx,y}, end:{x:rx,y}, thickness:0.8, color:black });
+    y -= lh * 1.2;
+  };
+
+  const finishPage = () => {
+    page.drawLine({ start:{x:lx,y:34}, end:{x:rx,y:34}, thickness:0.4, color:lite });
+    page.drawText('Source: Cambridge International Grade Threshold Tables  |  Generated by TERA', {
+      x: lx, y: 22, size: 6.5, font, color: lite
+    });
+  };
+
+  startPage();
+  for (const subj of subjects) {
+    if (y - subjectHeight(subj) < 50 && y < pageH - lh * 3) {
+      finishPage();
+      startPage();
+    }
+
+    page.drawRectangle({ x:lx - 4, y:y - 2, width:rx - lx + 8, height:lh + 4, color:rgb(0.93,0.93,0.93) });
+    page.drawText(subj.name.toUpperCase(), { x:lx, y, size:fontSize, font:bold, color:black });
+    const maxNote = 'Max: ' + (subj.data[0]?.max || '');
+    page.drawText(maxNote, { x:rx - font.widthOfTextAtSize(maxNote, fontSize - 0.5), y, size:fontSize - 0.5, font, color:grey });
+    y -= lh;
+
+    const grades = [...new Set(subj.data.flatMap(thresholdGrades))];
+    const gradeWidth = Math.min(44, 316 / Math.max(1, grades.length));
+    const columns = [0, 116, 158, ...grades.map((_, index) => 202 + index * gradeWidth)];
+    const headers = ['Session', 'Var', 'Max', ...grades];
+    headers.forEach((header, i) => page.drawText(header, { x:lx + columns[i], y, size:fontSize - 0.5, font:bold, color:mid }));
+    y -= lh * 0.3;
+    page.drawLine({ start:{x:lx,y}, end:{x:rx,y}, thickness:0.3, color:lite });
+    y -= lh * 0.8;
+
+    let lastSess = '';
+    for (const row of subj.data) {
+      if (lastSess && row.sess !== lastSess) {
+        page.drawLine({ start:{x:lx,y:y+lh*0.2}, end:{x:rx,y:y+lh*0.2}, thickness:0.2, color:lite });
+      }
+      lastSess = row.sess;
+      const values = [row.sess, row.v, String(row.max), ...grades.map(grade => {
+        const value = row.grades?.[grade];
+        return value === null || value === undefined ? '-' : String(value);
+      })];
+      values.forEach((value, i) => page.drawText(value, {
+        x:lx + columns[i], y, size:fontSize - 0.5, font:i >= 3 ? bold : font, color:i >= 3 ? black : grey
+      }));
+      y -= lh;
+    }
+    y -= lh * 0.5;
+    page.drawLine({ start:{x:lx,y}, end:{x:rx,y}, thickness:0.3, color:lite });
+    y -= lh * 0.7;
+  }
+  finishPage();
+}
+
+async function downloadMega() {
+  if (busy || megaBusy) return;
+  const ready = Object.values(compiledBlobs);
+  if (!ready.length) return;
+  megaBusy = true;
+  document.getElementById('btnMega').disabled = true;
+  setStatus('Building mega PDF…');
+  log('Merging ' + ready.length + ' booklets…', 'info');
+  try {
+    const mega = await PDFLib.PDFDocument.create();
+    let paperNum = 0;
+    for (const bytes of ready) {
+      paperNum++;
+      const label = detectedPairs.find(p => compiledBlobs[p.key] === bytes)?.label || ('Paper ' + paperNum);
+      setStatus('Adding ' + label + '…');
+      const doc = await PDFLib.PDFDocument.load(bytes);
+      // Skip page 0 (cover) in mega — individual downloads keep covers
+      const indices = doc.getPageIndices().slice(1);
+      const pages   = await mega.copyPages(doc, indices);
+      pages.forEach(p => mega.addPage(p));
+    }
+
+    // Combined threshold page — collect unique subjects from completed booklets.
+    const seenSubjects = [];
+    detectedPairs.forEach(p => {
+      if (!compiledBlobs[p.key]) return;
+      const m = (p.qpUrl || p.key || '').match(/(\d{4})/);
+      const code = p.subjectCode || m?.[1];
+      if (code && THRESHOLDS[code] && !seenSubjects.includes(code)) {
+        seenSubjects.push(code);
+      }
+    });
+    const completedPairs = detectedPairs.filter(p => compiledBlobs[p.key]);
+    const thresholdSubjects = collectThresholdSubjects(completedPairs);
+    if (thresholdSubjects.length) {
+      log('Adding combined grade threshold page…', 'dim');
+      await makeBalancedThresholdPages(mega, seenSubjects, thresholdSubjects);
+    }
+
+    const saved = await mega.save();
+    const sourcePages = Object.values(compiledStats).reduce((sum, stats) => sum + stats.sourcePages, 0);
+    const impact = TeraCore.calculatePageImpact(sourcePages, mega.getPageCount());
+    triggerDownload(saved, 'TERA_Collection_' + ready.length + '_papers.pdf');
+    log('✓ Mega PDF downloaded — ' + ready.length + ' papers', 'ok');
+    log(`  Mega print impact: ${impact.sourcePages} source → ${impact.outputPages} output; ${impact.pagesSaved} page(s) avoided (${impact.savingsPct}%)`, 'ok');
+    setStatus('Mega PDF ready — ' + ready.length + ' papers');
+  } catch (e) {
+    log('✗ Mega failed: ' + e.message, 'err');
+  } finally {
+    megaBusy = false;
+    document.getElementById('btnMega').disabled = Object.keys(compiledBlobs).length < 2;
+  }
+}
+
+function triggerDownload(bytes, name) {
+  const blob = new Blob([bytes], {type:'application/pdf'});
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {href:url, download:name});
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ═══════════════════════════════════════════
+//  CLEAR
+// ═══════════════════════════════════════════
+function clearAll() {
+  if (busy || megaBusy) return;
+  document.getElementById('linkInput').value = '';
+  document.getElementById('pairsList').querySelectorAll('.prow').forEach(r=>r.remove());
+  document.getElementById('pairsEmpty').style.display = 'block';
+  document.getElementById('linkCount').textContent  = '';
+  document.getElementById('pairCount').textContent  = '';
+  document.getElementById('btnCompile').disabled    = true;
+  document.getElementById('btnMega').disabled       = true;
+  document.getElementById('mainProg').classList.remove('vis');
+  document.getElementById('mainProgFill').style.width = '0%';
+  detectedPairs = []; compiledBlobs = {}; compiledStats = {};
+  localFiles = [];
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileList').replaceChildren();
+  document.getElementById('localCount').textContent = '';
+  document.getElementById('catalogCount').textContent = '';
+  document.getElementById('btnPairLocal').disabled = true;
+  setStatus('Ready');
+  log('Cleared.', 'dim');
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function setStatus(msg) { document.getElementById('statusText').textContent = msg; }
+
+function resetCompilationState() {
+  compiledBlobs = {};
+  compiledStats = {};
+  document.getElementById('btnMega').disabled = true;
+  document.getElementById('mainProg').classList.remove('vis');
+  document.getElementById('mainProgFill').style.width = '0%';
+  document.getElementById('mainProg').setAttribute('aria-valuenow', '0');
+}
+
+function log(msg, type='info') {
+  const area = document.getElementById('logArea');
+  const t    = new Date().toTimeString().slice(0,8);
+  const div  = document.createElement('div');
+  div.className = `ll ${type}`;
+  div.innerHTML = `<span class="lt">${t}</span><span class="lm">${esc(msg)}</span>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+}, 1000);
+
+document.getElementById('linkInput').addEventListener('input', function() {
+  const n = this.value.split('\n').filter(l=>l.trim()).length;
+  document.getElementById('linkCount').textContent = n ? `${n} line(s)` : '';
+});
+
+initCatalog();
+</script>
+</body>
+</html>

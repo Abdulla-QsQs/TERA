@@ -1,0 +1,11 @@
+.git
+.github
+.env
+.env.*
+node_modules
+test-fixtures
+test-output
+tests
+docs
+*.log
+biology-*-links.txt
