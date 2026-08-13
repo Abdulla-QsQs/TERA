@@ -4,3 +4,4 @@
 // Node.js 20+ and with restricted environments that disallow child processes.
 require('./core.test.js');
 require('./server.test.js');
+require('./cloudflare.test.js');

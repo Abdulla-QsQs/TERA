@@ -50,9 +50,11 @@ Maintainers only: `npm run vendor` intentionally regenerates the pinned browser 
 
 ## Production deployment
 
-`Dockerfile` is the provider-neutral release artifact. `render.yaml` provides one optional Render Blueprint using its free web-service plan and deploys only after repository checks pass. The server listens on the host-provided `PORT` and binds publicly only in a managed-host environment.
+The public deployment targets the Cloudflare Free plan. `npm run build:pages` creates an explicit static allowlist in `dist/`; Pages serves those files without invoking a Function. Only `/api/*` and `/healthz` invoke Pages Functions. The restricted relay streams approved PDFs, the welcome wall stores aggregate activity in D1, and the rate-limiter binding caps API requests without storing IP addresses in TERA's database.
 
-For durable visitor and successful-compilation totals, create a Supabase project, run [`docs/supabase-schema.sql`](docs/supabase-schema.sql), and set `SUPABASE_URL` plus the server-only `SUPABASE_SECRET_KEY` on the host. Also set `TERA_PUBLIC_URL` to the final HTTPS origin so canonical, social-preview, robots, and sitemap URLs are correct. Without Supabase credentials, local preview counters intentionally reset when the server restarts.
+See [Cloudflare deployment](docs/CLOUDFLARE_DEPLOYMENT.md) for the exact project, D1, migration, binding, and fail-closed settings. Do not attach a payment method or upgrade the Workers plan for the free deployment. At the Free-plan limits, dynamic requests fail until the allowance resets rather than becoming paid usage.
+
+`Dockerfile` and the local Node server remain provider-neutral fallback artifacts. A non-Cloudflare operator can optionally configure Supabase using [`docs/supabase-schema.sql`](docs/supabase-schema.sql); without those credentials, local preview counters intentionally reset when the process restarts.
 
 Treat deployments as public-beta pilots until the remaining rights, accessibility, and supervised-school checks in the P0 checklist are signed off.
 

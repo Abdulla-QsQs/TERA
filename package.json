@@ -16,9 +16,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build:pages": "node scripts/build-pages.js",
     "vendor": "node scripts/vendor.js",
     "check:vendor": "node scripts/check-vendor.js",
-    "check": "node --check server.js && node --check visitor-store.js && node --check wall.js && node scripts/check-html.js && npm run check:vendor",
+    "check:cloudflare": "node scripts/check-cloudflare.js",
+    "check:pages": "npm run build:pages && node scripts/check-pages-output.js",
+    "check": "node --check server.js && node --check visitor-store.js && node --check runtime-manifest.js && node --check wall.js && node scripts/check-html.js && npm run check:vendor && npm run check:cloudflare && npm run check:pages",
     "test": "node tests/run.js",
     "test:all": "npm run check && npm test"
   },

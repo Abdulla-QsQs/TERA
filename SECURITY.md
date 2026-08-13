@@ -12,4 +12,4 @@ Include the affected URL or version, reproduction steps, impact, and a safe proo
 
 ## Current boundaries
 
-The same-origin PDF relay accepts targets only in a JSON POST body, accepts only HTTPS `.pdf` URLs on an explicit host allowlist, rejects redirects and credentials, limits responses to 25 MB, applies a request rate limit, and does not persist PDF content. Uploaded local files are processed inside the browser.
+The same-origin PDF relay accepts targets only in a JSON POST body, accepts only HTTPS `.pdf` URLs on an explicit host allowlist, rejects redirects and credentials, limits responses to 25 MB, applies Cloudflare rate limiting, and does not persist PDF content. Uploaded local files are processed inside the browser. Static assets do not invoke Pages Functions, and dynamic routes fail closed when the Workers Free daily request allowance is exhausted.

@@ -7,6 +7,7 @@ const path = require('node:path');
 const { Readable, Transform } = require('node:stream');
 const { pipeline } = require('node:stream/promises');
 const visitorStore = require('./visitor-store.js');
+const { PUBLIC_FILE_DEFINITIONS } = require('./runtime-manifest.js');
 
 const ROOT = __dirname;
 const IS_MANAGED_HOST = Boolean(process.env.PORT);
@@ -19,33 +20,7 @@ const RATE_WINDOW_MS = 60000;
 const RATE_MAX_REQUESTS = 60;
 const ALLOWED_PDF_HOSTS = csvSet(process.env.TERA_ALLOWED_PDF_HOSTS || 'pastpapers.papacambridge.com');
 const ALLOWED_ORIGINS = csvSet(process.env.TERA_ALLOWED_ORIGINS || '');
-const PUBLIC_FILES = new Map([
-  ['/', { file:'index.html', type:'text/html; charset=utf-8', template:true }],
-  ['/index.html', { file:'index.html', type:'text/html; charset=utf-8', template:true }],
-  ['/TERA.html', { file:'TERA.html', type:'text/html; charset=utf-8', template:true }],
-  ['/NOTICE.html', { file:'NOTICE.html', type:'text/html; charset=utf-8' }],
-  ['/robots.txt', { file:'robots.txt', type:'text/plain; charset=utf-8', template:true }],
-  ['/sitemap.xml', { file:'sitemap.xml', type:'application/xml; charset=utf-8', template:true }],
-  ['/core.js', { file:'core.js', type:'text/javascript; charset=utf-8' }],
-  ['/wall.css', { file:'wall.css', type:'text/css; charset=utf-8' }],
-  ['/wall.js', { file:'wall.js', type:'text/javascript; charset=utf-8' }],
-  ['/docs/IMPACT_METHOD.md', { file:'docs/IMPACT_METHOD.md', type:'text/markdown; charset=utf-8' }],
-  ['/THIRD_PARTY_NOTICES.md', { file:'THIRD_PARTY_NOTICES.md', type:'text/markdown; charset=utf-8' }],
-  ['/LICENSE', { file:'LICENSE', type:'text/plain; charset=utf-8' }],
-  ['/LICENSES/README.md', { file:'LICENSES/README.md', type:'text/markdown; charset=utf-8' }],
-  ['/SUPPORT.md', { file:'SUPPORT.md', type:'text/markdown; charset=utf-8' }],
-  ['/assets/student-study.jpg', { file:'assets/student-study.jpg', type:'image/jpeg', immutable:true }],
-  ['/assets/paper-waste.jpg', { file:'assets/paper-waste.jpg', type:'image/jpeg', immutable:true }],
-  ['/assets/forest-sunlight.jpg', { file:'assets/forest-sunlight.jpg', type:'image/jpeg', immutable:true }],
-  ['/assets/leaf-emblem.jpg', { file:'assets/leaf-emblem.jpg', type:'image/jpeg', immutable:true }],
-  ['/assets/circle-check-big.svg', { file:'assets/circle-check-big.svg', type:'image/svg+xml', immutable:true }],
-  ['/assets/file-check.svg', { file:'assets/file-check.svg', type:'image/svg+xml', immutable:true }],
-  ['/assets/chevron-down.svg', { file:'assets/chevron-down.svg', type:'image/svg+xml', immutable:true }],
-  ['/assets/external-link.svg', { file:'assets/external-link.svg', type:'image/svg+xml', immutable:true }],
-  ['/vendor/pdf-lib/pdf-lib.min.js', { file:'vendor/pdf-lib/pdf-lib.min.js', type:'text/javascript; charset=utf-8', immutable:true }],
-  ['/vendor/pdfjs/pdf.min.js', { file:'vendor/pdfjs/pdf.min.js', type:'text/javascript; charset=utf-8', immutable:true }],
-  ['/vendor/pdfjs/pdf.worker.min.mjs', { file:'vendor/pdfjs/pdf.worker.min.mjs', type:'text/javascript; charset=utf-8', immutable:true }],
-]);
+const PUBLIC_FILES = new Map(PUBLIC_FILE_DEFINITIONS.map(({ route, ...asset }) => [route, asset]));
 const rateBuckets = new Map();
 setInterval(() => {
   const now = Date.now();
