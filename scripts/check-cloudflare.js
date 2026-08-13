@@ -30,7 +30,7 @@ async function main() {
     const database = new DatabaseSync(':memory:');
     database.exec(fs.readFileSync(path.join(ROOT, 'migrations', '0001_tera.sql'), 'utf8'));
     const tables = database.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row => row.name);
-    for (const name of ['tera_visitors', 'tera_usage_events', 'tera_meta']) {
+    for (const name of ['tera_visitors', 'tera_usage_events', 'tera_meta', 'tera_rate_limits']) {
       if (!tables.includes(name)) throw new Error(`Migration did not create ${name}`);
     }
     database.close();

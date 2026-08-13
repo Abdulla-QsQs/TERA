@@ -59,11 +59,60 @@ export function originAllowed(request, env = {}) {
   }
 }
 
-export async function withinRateLimit(context) {
-  if (!context.env?.RATE_LIMITER?.limit) return true;
-  const client = context.request.headers.get('cf-connecting-ip') || 'unknown';
-  const result = await context.env.RATE_LIMITER.limit({ key:client });
-  return Boolean(result?.success);
+async function shortLivedActorHash(secret, client, pathname, bucket) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name:'HMAC', hash:'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(`${client}\0${pathname}\0${bucket}`),
+  );
+  return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function withinRateLimit(context, options = {}) {
+  const limit = Number(options.limit || 60);
+  const periodSeconds = Number(options.periodSeconds || 60);
+  const nativeLimiter = context.env?.RATE_LIMITER;
+  const client = context.request.headers.get('cf-connecting-ip');
+
+  if (nativeLimiter?.limit && client) {
+    try {
+      const result = await nativeLimiter.limit({ key:client });
+      return Boolean(result?.success);
+    } catch (_) {
+      // Continue to the D1 fallback when a configured platform binding is unavailable.
+    }
+  }
+
+  const db = context.env?.DB;
+  const secret = String(context.env?.RATE_LIMIT_SALT || '');
+  if (!client || !db?.prepare || secret.length < 16) return true;
+
+  try {
+    const now = Date.now();
+    const bucket = Math.floor(now / (periodSeconds * 1000));
+    const pathname = new URL(context.request.url).pathname;
+    const actorHash = await shortLivedActorHash(secret, client, pathname, bucket);
+    const row = await db.prepare(`
+      INSERT INTO tera_rate_limits
+        (bucket, actor_hash, route, request_count, created_at)
+      VALUES (?1, ?2, ?3, 1, ?4)
+      ON CONFLICT(bucket, actor_hash, route)
+      DO UPDATE SET request_count = request_count + 1
+      RETURNING request_count
+    `).bind(bucket, actorHash, pathname, new Date(now).toISOString()).first();
+    return Number(row?.request_count || 0) <= limit;
+  } catch (_) {
+    // A configured production limiter must fail closed if its persistence is unhealthy.
+    return false;
+  }
 }
 
 export function methodNotAllowed(allow) {

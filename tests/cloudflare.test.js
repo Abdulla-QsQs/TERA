@@ -5,6 +5,7 @@ class MemoryD1 {
   constructor() {
     this.visitors = [];
     this.events = [];
+    this.rateLimits = new Map();
     this.meta = new Map([['last_cleanup', '1970-01-01']]);
   }
 
@@ -27,6 +28,13 @@ class MemoryD1 {
         return { success:true };
       },
       async first() {
+        if (normalized.startsWith('INSERT INTO tera_rate_limits')) {
+          const [bucket, actor_hash, route, created_at] = this.values;
+          const key = `${bucket}:${actor_hash}:${route}`;
+          const request_count = (database.rateLimits.get(key)?.request_count || 0) + 1;
+          database.rateLimits.set(key, { bucket, actor_hash, route, created_at, request_count });
+          return { request_count };
+        }
         if (normalized.startsWith("SELECT value FROM tera_meta")) {
           return { value:database.meta.get('last_cleanup') };
         }
@@ -50,11 +58,13 @@ class MemoryD1 {
 }
 
 let validation;
+let http;
 let wallHandlers;
 let pdfHandler;
 
 test.before(async () => {
   validation = await import('../functions/_shared/validation.mjs');
+  http = await import('../functions/_shared/http.mjs');
   wallHandlers = await import('../functions/_handlers/wall.mjs');
   pdfHandler = await import('../functions/_handlers/pdf.mjs');
 });
@@ -117,6 +127,18 @@ test('Cloudflare handlers reject foreign origins and invalid relay targets', asy
   const nonPdf = context('/api/pdf', 'POST', { url:'https://pastpapers.papacambridge.com/file.html' });
   assert.equal((await pdfHandler.onPdfRequest(nonPdf)).status, 400);
   assert.equal((await pdfHandler.onPdfRequest(context('/api/pdf'))).status, 405);
+});
+
+test('Cloudflare D1 fallback rate limiter fails closed after its configured allowance', async () => {
+  const limited = context('/api/pdf', 'POST', { url:'https://pastpapers.papacambridge.com/file.pdf' }, {
+    'cf-connecting-ip':'203.0.113.42',
+  });
+  delete limited.env.RATE_LIMITER;
+  limited.env.RATE_LIMIT_SALT = 'test-only-rate-limit-secret';
+  assert.equal(await http.withinRateLimit(limited, { limit:2, periodSeconds:60 }), true);
+  assert.equal(await http.withinRateLimit(limited, { limit:2, periodSeconds:60 }), true);
+  assert.equal(await http.withinRateLimit(limited, { limit:2, periodSeconds:60 }), false);
+  assert.equal(limited.env.DB.rateLimits.size, 1);
 });
 
 test('Cloudflare API responses retain the release security headers', async () => {

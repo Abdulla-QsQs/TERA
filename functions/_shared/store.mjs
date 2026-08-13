@@ -68,6 +68,7 @@ async function applyRetention(db) {
     db.prepare("UPDATE tera_visitors SET display_name = NULL WHERE display_name IS NOT NULL AND created_at < datetime('now', '-90 days')"),
     db.prepare("DELETE FROM tera_usage_events WHERE created_at < datetime('now', '-24 months')"),
     db.prepare("DELETE FROM tera_visitors WHERE created_at < datetime('now', '-24 months')"),
+    db.prepare("DELETE FROM tera_rate_limits WHERE created_at < datetime('now', '-10 minutes')"),
     db.prepare("INSERT INTO tera_meta (key, value) VALUES ('last_cleanup', ?1) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(today),
   ]);
 }

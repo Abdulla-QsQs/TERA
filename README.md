@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-dff47e.svg)](LICENSE)
 [![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-43853d.svg)](https://nodejs.org/)
 
+**Live public beta:** [tera-paper-compiler.pages.dev](https://tera-paper-compiler.pages.dev/)
+
 TERA turns lawfully acquired question papers and mark schemes into print-efficient practice booklets. It preserves non-blank question-paper pages, removes mark-scheme cover/generic-guidance pages, and places two real marking pages on adaptive portrait/landscape A4 sheets while keeping the original compact interface.
 
 TERA is available as a public beta. Generated booklets must still be reviewed before printing, and institutions should complete the human, rights, accessibility, and printer checks in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) before broad supervised use.
@@ -50,7 +52,7 @@ Maintainers only: `npm run vendor` intentionally regenerates the pinned browser 
 
 ## Production deployment
 
-The public deployment targets the Cloudflare Free plan. `npm run build:pages` creates an explicit static allowlist in `dist/`; Pages serves those files without invoking a Function. Only `/api/*` and `/healthz` invoke Pages Functions. The restricted relay streams approved PDFs, the welcome wall stores aggregate activity in D1, and the rate-limiter binding caps API requests without storing IP addresses in TERA's database.
+The public deployment targets the Cloudflare Free plan. `npm run build:pages` creates an explicit static allowlist in `dist/`; Pages serves those files without invoking a Function. Only `/api/*` and `/healthz` invoke Pages Functions. The restricted relay streams approved PDFs, the welcome wall stores aggregate activity in D1, and short-lived D1 rate counters use rotating keyed hashes without storing raw IP addresses.
 
 See [Cloudflare deployment](docs/CLOUDFLARE_DEPLOYMENT.md) for the exact project, D1, migration, binding, and fail-closed settings. Do not attach a payment method or upgrade the Workers plan for the free deployment. At the Free-plan limits, dynamic requests fail until the allowance resets rather than becoming paid usage.
 

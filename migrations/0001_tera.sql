@@ -25,9 +25,19 @@ CREATE TABLE IF NOT EXISTS tera_meta (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS tera_rate_limits (
+  bucket INTEGER NOT NULL,
+  actor_hash TEXT NOT NULL,
+  route TEXT NOT NULL,
+  request_count INTEGER NOT NULL DEFAULT 1 CHECK (request_count > 0),
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (bucket, actor_hash, route)
+);
+
 CREATE INDEX IF NOT EXISTS tera_visitors_created_at_idx ON tera_visitors(created_at DESC);
 CREATE INDEX IF NOT EXISTS tera_usage_events_created_at_idx ON tera_usage_events(created_at DESC);
 CREATE INDEX IF NOT EXISTS tera_usage_events_visitor_id_idx ON tera_usage_events(visitor_id);
+CREATE INDEX IF NOT EXISTS tera_rate_limits_created_at_idx ON tera_rate_limits(created_at DESC);
 
 INSERT INTO tera_meta (key, value) VALUES ('last_cleanup', '1970-01-01')
 ON CONFLICT(key) DO NOTHING;

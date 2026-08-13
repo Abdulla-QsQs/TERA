@@ -12,7 +12,7 @@
   "bugs": {
     "url": "https://github.com/Abdulla-QsQs/TERA/issues"
   },
-  "homepage": "https://github.com/Abdulla-QsQs/TERA#readme",
+  "homepage": "https://tera-paper-compiler.pages.dev/",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

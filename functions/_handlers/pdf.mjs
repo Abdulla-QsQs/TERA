@@ -14,7 +14,7 @@ export async function onPdfRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return methodNotAllowed('POST');
   if (!originAllowed(request, env)) return textResponse('Origin not allowed.', 403);
-  if (!await withinRateLimit(context)) {
+  if (!await withinRateLimit(context, { limit:30, periodSeconds:60 })) {
     return textResponse('Too many PDF requests. Try again shortly.', 429, { 'Retry-After':'60' });
   }
 

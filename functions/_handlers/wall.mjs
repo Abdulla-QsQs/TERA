@@ -20,7 +20,7 @@ export async function onStatsRequest(context) {
 async function onMutation(context, action) {
   if (context.request.method !== 'POST') return methodNotAllowed('POST');
   if (!originAllowed(context.request, context.env)) return jsonResponse({ error:'Origin not allowed.' }, 403);
-  if (!await withinRateLimit(context)) {
+  if (!await withinRateLimit(context, { limit:20, periodSeconds:60 })) {
     return jsonResponse({ error:'Too many requests. Try again shortly.' }, 429, { 'Retry-After':'60' });
   }
   try {
