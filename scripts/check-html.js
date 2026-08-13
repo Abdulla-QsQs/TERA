@@ -23,6 +23,9 @@ if (!landing.includes('class="skip-link"')) throw new Error('Landing page skip l
 if (!landing.includes('rel="canonical"') || !landing.includes('application/ld+json')) throw new Error('Landing page SEO metadata is incomplete');
 if (!landing.includes('data-tera-stat="visitors"')) throw new Error('Landing page usage counter is missing');
 if (!html.includes('wall.js') || !html.includes('TERAUsage.recordCompilation')) throw new Error('Compiler usage reporting hook is missing');
+if (!html.includes("typeof Promise.withResolvers !== 'function'")) throw new Error('iOS Safari Promise compatibility guard is missing');
+if (!html.includes('isOffscreenCanvasSupported:false') || !html.includes('isImageDecoderSupported:false')) throw new Error('Conservative iOS PDF.js options are missing');
+if (!html.includes('typeof canvas.toBlob === \'function\'')) throw new Error('iOS canvas export fallback is missing');
 for (const asset of ['assets/student-study.jpg', 'assets/paper-waste.jpg', 'assets/forest-sunlight.jpg', 'assets/leaf-emblem.jpg']) {
   if (!landing.includes(asset)) throw new Error(`Landing page photo is missing: ${asset}`);
 }

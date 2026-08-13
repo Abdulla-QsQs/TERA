@@ -329,6 +329,16 @@ html,body{
 </div>
 
 <script>
+// PDF.js uses this modern Promise helper internally. Older iOS Safari/WebKit
+// releases do not provide it, which otherwise makes every PDF load fail with
+// the unhelpful message "undefined is not a function" after downloading.
+if (typeof Promise.withResolvers !== 'function') {
+  Promise.withResolvers = function withResolvers() {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+    return { promise, resolve, reject };
+  };
+}
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'vendor/pdfjs/pdf.worker.min.mjs';
 
@@ -384,6 +394,38 @@ function isMobileCompiler() {
 
 function nextPaint() {
   return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+function explainCompileError(error) {
+  const message = String(error?.message || error || 'Unknown compilation error');
+  if (/undefined is not a function|withResolvers/i.test(message)) {
+    const stage = message.includes(':') ? `${message.slice(0, message.indexOf(':'))}: ` : '';
+    return `${stage}This Safari version is missing a PDF compatibility feature. Reload TERA to apply the latest compatibility fix.`;
+  }
+  if (/out of memory|allocation|canvas area|exceeded the memory/i.test(message)) {
+    return 'This booklet exceeded the phone\'s available memory. Compile fewer paper pairs at once, then use Mega PDF to join the completed booklets.';
+  }
+  return message;
+}
+
+function pdfLoadOptions(bytes) {
+  return {
+    data:new Uint8Array(bytes),
+    // iOS Safari has historically exposed partial implementations of these
+    // APIs. The conservative path is more stable and costs little for TERA's
+    // page-at-a-time processing.
+    isOffscreenCanvasSupported:false,
+    isImageDecoderSupported:false,
+  };
+}
+
+function compileStage(label, work) {
+  return Promise.resolve().then(work).catch(error => {
+    const detail = String(error?.message || error || 'Unknown error');
+    const wrapped = new Error(`${label}: ${detail}`);
+    wrapped.originalError = error;
+    throw wrapped;
+  });
 }
 
 async function fetchPDF(url) {
@@ -550,7 +592,7 @@ function caieThresholdUrl(code, session, year) {
 }
 
 async function extractComponentThreshold(gtBytes, pair) {
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(gtBytes.slice(0)) });
+  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(gtBytes.slice(0)));
   const pdfDoc = await loadingTask.promise;
   try {
     const lines = [];
@@ -749,7 +791,7 @@ async function pageHasVisibleInk(page) {
 
 async function getNonBlankIndices(pdfBytes, onPage = null) {
   const copy   = pdfBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
   const pdfDoc = await loadingTask.promise;
   const total  = pdfDoc.numPages;
   const keep   = [];
@@ -956,7 +998,7 @@ function isMarkSchemeBoilerplate(text) {
 
 async function getMarkSchemeContentIndices(msBytes, onPage = null) {
   const copy   = msBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
   const pdfDoc = await loadingTask.promise;
   try {
     const texts = [];
@@ -1016,7 +1058,17 @@ async function renderPageToJpeg(pdfJsDoc, pageNum, renderW) {
   ctx.fillStyle  = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  let blob;
+  if (typeof canvas.toBlob === 'function') {
+    blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  } else {
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const encoded = dataUrl.slice(dataUrl.indexOf(',') + 1);
+    const binary = atob(encoded);
+    const fallbackBytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index++) fallbackBytes[index] = binary.charCodeAt(index);
+    blob = new Blob([fallbackBytes], { type:'image/jpeg' });
+  }
   page.cleanup();
   if (!blob) throw new Error('Could not render mark-scheme page');
   const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -1026,7 +1078,7 @@ async function renderPageToJpeg(pdfJsDoc, pageNum, renderW) {
 
 async function compactMS(msBytes, keepIndices, onSheet = null) {
   const copy     = msBytes.slice(0);
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
+  const loadingTask = pdfjsLib.getDocument(pdfLoadOptions(copy));
   const pdfJsDoc = await loadingTask.promise;
   const outDoc   = await PDFLib.PDFDocument.create();
   const layoutCounts = { portrait:0, landscape:0 };
@@ -1190,39 +1242,43 @@ async function compilePair(pair, onProgress) {
     msBytes = pair.msBytes;
   } else {
     onProgress(5, 'Fetching QP…');
-    const paperFetches = Promise.all([fetchPDF(pair.qpUrl), fetchPDF(pair.msUrl)]);
+    const paperFetches = Promise.all([
+      compileStage('Downloading QP', () => fetchPDF(pair.qpUrl)),
+      compileStage('Downloading MS', () => fetchPDF(pair.msUrl)),
+    ]);
     onProgress(25, 'Fetching MS…');
     [qpBytes, msBytes] = await paperFetches;
     onProgress(32, 'Papers downloaded');
   }
 
-  const qpDoc = await PDFLib.PDFDocument.load(qpBytes);
-  const msSourceDoc = await PDFLib.PDFDocument.load(msBytes);
+  onProgress(36, 'Opening PDFs…');
+  const qpDoc = await compileStage('Opening QP', () => PDFLib.PDFDocument.load(qpBytes));
+  const msSourceDoc = await compileStage('Opening MS', () => PDFLib.PDFDocument.load(msBytes));
   const sourcePages = qpDoc.getPageCount() + msSourceDoc.getPageCount();
 
   // Preserve every source page except pages that are genuinely blank.
   onProgress(45, 'Scanning QP pages…');
-  const qpKeep = await getNonBlankIndices(qpBytes, (page, total) => {
+  const qpKeep = await compileStage('Scanning QP', () => getNonBlankIndices(qpBytes, (page, total) => {
     onProgress(45 + Math.round((page / total) * 14), `Scanning QP page ${page}/${total}...`);
-  });
+  }));
   if (!qpKeep.length) throw new Error('No non-blank question-paper pages found');
 
   // Omit the MS cover and generic marking principles. Keep actual question,
   // answer, marks-table pages only.
   onProgress(60, 'Finding marking pages…');
-  const msKeep = await getMarkSchemeContentIndices(msBytes, (page, total) => {
+  const msKeep = await compileStage('Scanning MS', () => getMarkSchemeContentIndices(msBytes, (page, total) => {
     onProgress(60 + Math.round((page / total) * 14), `Scanning MS page ${page}/${total}...`);
-  });
+  }));
   if (!msKeep.length) throw new Error('No actual mark-scheme pages found');
 
   onProgress(76, 'Building booklet…');
   const book  = await PDFLib.PDFDocument.create();
 
   // Cover page — first page of every booklet
-  await makeCoverPage(book, pair.label, pair);
+  await compileStage('Building cover', () => makeCoverPage(book, pair.label, pair));
 
   if (qpKeep.length) {
-    const qpPages = await book.copyPages(qpDoc, qpKeep);
+    const qpPages = await compileStage('Copying QP pages', () => book.copyPages(qpDoc, qpKeep));
     qpPages.forEach(p => book.addPage(p));
   }
 
@@ -1231,10 +1287,10 @@ async function compilePair(pair, onProgress) {
   let msSheetCount = 0;
   if (msKeep.length) {
     onProgress(82, 'Compacting marking pages…');
-    const msCompact = await compactMS(msBytes, msKeep, (sheet, total) => {
+    const msCompact = await compileStage('Compacting MS', () => compactMS(msBytes, msKeep, (sheet, total) => {
       onProgress(82 + Math.round((sheet / total) * 10), `Packing MS sheet ${sheet}/${total}...`);
-    });
-    const twoPgs  = await book.copyPages(msCompact, msCompact.getPageIndices());
+    }));
+    const twoPgs  = await compileStage('Copying MS sheets', () => book.copyPages(msCompact, msCompact.getPageIndices()));
     twoPgs.forEach(p => book.addPage(p));
     msSheetCount = msCompact.getPageCount();
   }
@@ -1252,7 +1308,7 @@ async function compilePair(pair, onProgress) {
   }
 
   onProgress(98, 'Saving…');
-  const saved = await book.save();
+  const saved = await compileStage('Saving booklet', () => book.save());
   const impact = TeraCore.calculatePageImpact(sourcePages, book.getPageCount());
   onProgress(100, 'Done — ' + qpKeep.length + ' QP + ' + msSheetCount + ' MS sheets');
 
@@ -1519,7 +1575,8 @@ async function compileAll() {
     } catch (err) {
       row.className = 'prow err';
       pg.style.display = 'none';
-      log(`✗ ${p.label} — ${err.message}`, 'err');
+      console.error('TERA compile failure', err);
+      log(`✗ ${p.label} — ${explainCompileError(err)}`, 'err');
     }
 
     const pct = Math.round(((i+1)/eligible.length)*100);
