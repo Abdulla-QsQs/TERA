@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Compile permitted Cambridge A Level, O Level and IGCSE past papers and mark schemes into print-efficient PDF practice booklets.">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="%%TERA_PUBLIC_URL%%/TERA.html">
@@ -190,6 +190,12 @@ html,body{
   .catrow .cf:nth-child(n+3){grid-column:auto;}
   .brow{flex-wrap:wrap;}
   .pprog{width:50px;}
+  .btn{min-height:36px;height:auto;padding:7px 12px;}
+  .sel,.inp{height:36px;font-size:12px;}
+  .tab{min-height:40px;display:flex;align-items:center;padding-inline:12px;}
+  .checks{height:36px;}
+  .checks input{width:18px;height:18px;}
+  .sclock{display:none;}
 }
 </style>
 </head>
@@ -369,6 +375,16 @@ const FETCH_ROUTES = [
 ];
 let workingRouteIdx = null; // reuse a successful route first
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
+const MOBILE_RENDER_WIDTH = 1280;
+const DESKTOP_RENDER_WIDTH = 1750;
+
+function isMobileCompiler() {
+  return matchMedia('(max-width: 620px), (pointer: coarse)').matches;
+}
+
+function nextPaint() {
+  return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
 
 async function fetchPDF(url) {
   const order = workingRouteIdx !== null
@@ -712,7 +728,26 @@ function buildPairs(lines) {
 //  A page is removed only when it is explicitly labelled blank, or when it has
 //  no extracted text and almost no visible ink. Sparse content is preserved.
 // ═══════════════════════════════════════════
-async function getNonBlankIndices(pdfBytes) {
+async function pageHasVisibleInk(page) {
+  const viewport = page.getViewport({ scale:0.5 });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  const ctx = canvas.getContext('2d', { alpha:false });
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext:ctx, viewport }).promise;
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let ink = 0;
+  for (let index = 0; index < data.length; index += 4) {
+    if (data[index] < 245 || data[index + 1] < 245 || data[index + 2] < 245) ink++;
+  }
+  const visible = (ink / (data.length / 4)) >= 0.001;
+  canvas.width = canvas.height = 1;
+  return visible;
+}
+
+async function getNonBlankIndices(pdfBytes, onPage = null) {
   const copy   = pdfBytes.slice(0);
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
   const pdfDoc = await loadingTask.promise;
@@ -727,30 +762,29 @@ async function getNonBlankIndices(pdfBytes) {
       try {
         const tc   = await page.getTextContent();
         text = tc.items.map(it => it.str).join(' ');
-        if (isExplicitBlankPage(text)) continue;
+        if (isExplicitBlankPage(text)) {
+          page.cleanup();
+          onPage?.(i, total);
+          if (isMobileCompiler()) await nextPaint();
+          continue;
+        }
       } catch(_) {}
 
       // Any real text is enough evidence that this page contains content.
       if (text.replace(/\s/g, '').length > 0) {
         keep.push(i - 1);
+        page.cleanup();
+        onPage?.(i, total);
+        if (isMobileCompiler() && i % 3 === 0) await nextPaint();
         continue;
       }
 
       // Image-only pages are treated as blank only when less than 0.1% of their
       // pixels contain visible ink. This deliberately keeps sparse diagrams.
-      const viewport = page.getViewport({ scale: 0.5 });
-      const canvas   = document.createElement('canvas');
-      canvas.width   = Math.ceil(viewport.width);
-      canvas.height  = Math.ceil(viewport.height);
-      const ctx      = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let ink = 0;
-      for (let j = 0; j < data.length; j += 4) {
-        if (data[j] < 245 || data[j+1] < 245 || data[j+2] < 245) ink++;
-      }
-      if ((ink / (data.length/4)) >= 0.001) keep.push(i - 1);
-      canvas.width = canvas.height = 1;
+      if (await pageHasVisibleInk(page)) keep.push(i - 1);
+      page.cleanup();
+      onPage?.(i, total);
+      if (isMobileCompiler()) await nextPaint();
     }
   } finally {
     await loadingTask.destroy();
@@ -920,7 +954,7 @@ function isMarkSchemeBoilerplate(text) {
   return /\b(?:Generic Marking Principles|Science-Specific Marking Principles|Mark scheme abbreviations|This mark scheme is published)\b/i.test(text);
 }
 
-async function getMarkSchemeContentIndices(msBytes) {
+async function getMarkSchemeContentIndices(msBytes, onPage = null) {
   const copy   = msBytes.slice(0);
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
   const pdfDoc = await loadingTask.promise;
@@ -929,6 +963,9 @@ async function getMarkSchemeContentIndices(msBytes) {
     for (let i = 0; i < pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i + 1);
       texts.push((await page.getTextContent()).items.map(item => item.str).join(' '));
+      page.cleanup();
+      onPage?.(i + 1, pdfDoc.numPages);
+      if (isMobileCompiler() && i % 3 === 2) await nextPaint();
     }
 
     // The first table is the boundary between examiner guidance and answers.
@@ -938,10 +975,17 @@ async function getMarkSchemeContentIndices(msBytes) {
     const firstContent = texts.findIndex(isMarkSchemeContentPage);
     if (firstContent < 0) return [];
 
-    const nonBlank = new Set(await getNonBlankIndices(msBytes));
     const keep = [];
     for (let i = firstContent; i < texts.length; i++) {
-      if (!nonBlank.has(i) || isMarkSchemeBoilerplate(texts[i])) continue;
+      // Preserve textless answer continuations after the first marking table;
+      // only explicit blank and boilerplate pages are removed here.
+      if (isExplicitBlankPage(texts[i]) || isMarkSchemeBoilerplate(texts[i])) continue;
+      if (!texts[i].replace(/\s/g, '')) {
+        const page = await pdfDoc.getPage(i + 1);
+        const visible = await pageHasVisibleInk(page);
+        page.cleanup();
+        if (!visible) continue;
+      }
       keep.push(i);
     }
     log(`  MS marking pages: ${keep.map(index => index + 1).join(', ') || 'none'}`, 'dim');
@@ -968,21 +1012,25 @@ async function renderPageToJpeg(pdfJsDoc, pageNum, renderW) {
   const canvas   = document.createElement('canvas');
   canvas.width   = Math.ceil(viewport.width);
   canvas.height  = Math.ceil(viewport.height);
-  const ctx      = canvas.getContext('2d');
+  const ctx      = canvas.getContext('2d', { alpha:false });
   ctx.fillStyle  = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+  page.cleanup();
   if (!blob) throw new Error('Could not render mark-scheme page');
-  return new Uint8Array(await blob.arrayBuffer());
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  canvas.width = canvas.height = 1;
+  return bytes;
 }
 
-async function compactMS(msBytes, keepIndices) {
+async function compactMS(msBytes, keepIndices, onSheet = null) {
   const copy     = msBytes.slice(0);
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(copy) });
   const pdfJsDoc = await loadingTask.promise;
   const outDoc   = await PDFLib.PDFDocument.create();
   const layoutCounts = { portrait:0, landscape:0 };
+  const renderWidth = isMobileCompiler() ? MOBILE_RENDER_WIDTH : DESKTOP_RENDER_WIDTH;
 
   const margin = 8;
   const gap = 5;
@@ -1002,10 +1050,10 @@ async function compactMS(msBytes, keepIndices) {
     for (let i = 0; i < keepIndices.length; i += 2) {
       const firstIndex = keepIndices[i];
       const secondIndex = keepIndices[i + 1];
-      const firstImage = await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, firstIndex + 1, 1750));
+      const firstImage = await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, firstIndex + 1, renderWidth));
       const secondImage = secondIndex === undefined
         ? null
-        : await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, secondIndex + 1, 1750));
+        : await outDoc.embedJpg(await renderPageToJpeg(pdfJsDoc, secondIndex + 1, renderWidth));
       const layout = TeraCore.chooseTwoUpLayout([firstImage, secondImage], { margin, gap });
       layoutCounts[layout.orientation]++;
       const sheet = outDoc.addPage([layout.pageW, layout.pageH]);
@@ -1022,6 +1070,8 @@ async function compactMS(msBytes, keepIndices) {
           color: PDFLib.rgb(0.78, 0.78, 0.78),
         });
       }
+      onSheet?.(Math.floor(i / 2) + 1, Math.ceil(keepIndices.length / 2));
+      if (isMobileCompiler()) await nextPaint();
     }
     const layoutSummary = Object.entries(layoutCounts)
       .filter(([, count]) => count)
@@ -1140,11 +1190,10 @@ async function compilePair(pair, onProgress) {
     msBytes = pair.msBytes;
   } else {
     onProgress(5, 'Fetching QP…');
-    qpBytes = await fetchPDF(pair.qpUrl);
-    await sleep(1200);
+    const paperFetches = Promise.all([fetchPDF(pair.qpUrl), fetchPDF(pair.msUrl)]);
     onProgress(25, 'Fetching MS…');
-    msBytes = await fetchPDF(pair.msUrl);
-    await sleep(700);
+    [qpBytes, msBytes] = await paperFetches;
+    onProgress(32, 'Papers downloaded');
   }
 
   const qpDoc = await PDFLib.PDFDocument.load(qpBytes);
@@ -1153,13 +1202,17 @@ async function compilePair(pair, onProgress) {
 
   // Preserve every source page except pages that are genuinely blank.
   onProgress(45, 'Scanning QP pages…');
-  const qpKeep = await getNonBlankIndices(qpBytes);
+  const qpKeep = await getNonBlankIndices(qpBytes, (page, total) => {
+    onProgress(45 + Math.round((page / total) * 14), `Scanning QP page ${page}/${total}...`);
+  });
   if (!qpKeep.length) throw new Error('No non-blank question-paper pages found');
 
   // Omit the MS cover and generic marking principles. Keep actual question,
   // answer, marks-table pages only.
   onProgress(60, 'Finding marking pages…');
-  const msKeep = await getMarkSchemeContentIndices(msBytes);
+  const msKeep = await getMarkSchemeContentIndices(msBytes, (page, total) => {
+    onProgress(60 + Math.round((page / total) * 14), `Scanning MS page ${page}/${total}...`);
+  });
   if (!msKeep.length) throw new Error('No actual mark-scheme pages found');
 
   onProgress(76, 'Building booklet…');
@@ -1178,7 +1231,9 @@ async function compilePair(pair, onProgress) {
   let msSheetCount = 0;
   if (msKeep.length) {
     onProgress(82, 'Compacting marking pages…');
-    const msCompact = await compactMS(msBytes, msKeep);
+    const msCompact = await compactMS(msBytes, msKeep, (sheet, total) => {
+      onProgress(82 + Math.round((sheet / total) * 10), `Packing MS sheet ${sheet}/${total}...`);
+    });
     const twoPgs  = await book.copyPages(msCompact, msCompact.getPageIndices());
     twoPgs.forEach(p => book.addPage(p));
     msSheetCount = msCompact.getPageCount();
@@ -1436,6 +1491,7 @@ async function compileAll() {
     pg.style.display = 'block';
     setStatus(`Compiling: ${p.label}`);
     log(`Processing: ${p.label}`, 'info');
+    await nextPaint();
 
     try {
       const res = await compilePair(p, (pct, msg) => {
@@ -1469,7 +1525,7 @@ async function compileAll() {
     const pct = Math.round(((i+1)/eligible.length)*100);
     document.getElementById('mainProgFill').style.width = pct + '%';
     document.getElementById('mainProg').setAttribute('aria-valuenow', String(pct));
-    if (i < eligible.length-1) await sleep(400);
+    await nextPaint();
   }
 
   log(`━━━ Complete: ${done}/${eligible.length} ━━━`, 'bold');

@@ -125,6 +125,13 @@
     countryOptions(country);
     document.body.appendChild(overlay);
     document.body.classList.add('tera-wall-open');
+    const syncViewport = () => {
+      const height = window.visualViewport?.height || window.innerHeight;
+      overlay.style.setProperty('--tera-wall-height', `${Math.round(height)}px`);
+    };
+    syncViewport();
+    window.visualViewport?.addEventListener('resize', syncViewport);
+    window.addEventListener('orientationchange', syncViewport);
     card.addEventListener('keydown', event => trapFocus(event, card));
     setTimeout(() => name.focus(), 0);
 
@@ -153,6 +160,8 @@
           countryCode:result.visitor.countryCode,
         }));
         setStats(result.stats || {});
+        window.visualViewport?.removeEventListener('resize', syncViewport);
+        window.removeEventListener('orientationchange', syncViewport);
         overlay.remove();
         document.body.classList.remove('tera-wall-open');
         document.dispatchEvent(new CustomEvent('tera:visitor-ready', { detail:result.visitor }));
