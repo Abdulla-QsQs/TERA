@@ -7,7 +7,7 @@
 - [x] Confirm the Cloudflare Pages/Functions/D1 Free-plan deployment at `https://tera-paper-compiler.pages.dev/`.
 - [x] Run `migrations/0001_tera.sql` on D1, verify retention, and confirm the public totals survive a clean redeploy.
 - [ ] Obtain and archive the permissions/terms assessment for every enabled source and transformation. A third-party host is not evidence of republication permission.
-- [ ] Enable GitHub private vulnerability reporting, branch protection, required CI, secret scanning, and Dependabot alerts.
+- [x] Enable GitHub private vulnerability reporting, `main` branch protection with required `test` CI, secret scanning/push protection, dependency graph, Dependabot alerts, and grouped security updates.
 - [ ] Complete the 100-paper stratified visual validation with zero missing/duplicated/reordered/clipped content pages.
 - [ ] Complete keyboard, 200% zoom, contrast, and screen-reader human tests.
 - [ ] Run a limited staff-supervised pilot and close every high-severity finding.
